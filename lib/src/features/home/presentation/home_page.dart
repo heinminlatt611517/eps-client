@@ -1,0 +1,243 @@
+import 'package:eps_client/src/utils/strings.dart';
+import 'package:flutter/material.dart';
+
+import '../../../widgets/app_card_view.dart';
+import '../../../widgets/home_service_card_view.dart';
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Scaffold(
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top bar
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: cs.secondaryContainer,
+                    child: Icon(Icons.person_outline, color: cs.onSecondaryContainer),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Hello | Login',
+                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  ),
+                  _IconBadge(
+                    icon: Icons.notifications_none_rounded,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              ///search view
+              AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: cs.outline),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: kLabelSearchServices,
+                          border: InputBorder.none,
+                          hintStyle: text.bodyMedium?.copyWith(color: cs.outline),
+                          isCollapsed: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const SectionTitle(kLabelOurMostUsefulServices),
+              const SizedBox(height: 12),
+
+              /// Services grid
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.6,
+                children: const [
+                  ServiceCard(
+                    icon: Icons.important_devices,
+                    title: kLabelVisaPassportServices,
+                    enabled: true,
+                  ),
+                  ServiceCard(
+                    icon: Icons.work_outline,
+                    title: kLabelJobOpportunities,
+                    enabled: true,
+                  ),
+                  ServiceCard(
+                    icon: Icons.badge_outlined,
+                    title: kLabelDrivingLicenseServices,
+                    enabled: true,
+                  ),
+                  ServiceCard(
+                    icon: Icons.car_repair_outlined,
+                    title: kLabelCarAndWorkshops,
+                    enabled: false, // greyed like mock
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              const SectionTitle(kLabelWhatIsNew),
+              const SizedBox(height: 12),
+
+              /// Promo banner
+              PromoBanner(
+                leadingIcon: Icons.campaign_outlined,
+                title: kLabelFreeCarWorkShop,
+                trailing: Icon(Icons.ev_station_outlined,
+                    size: 56, color: Theme.of(context).colorScheme.primary),
+                onTap: () {},
+              ),
+              const SizedBox(height: 20),
+
+              const SectionTitle(kLabelFindNearByServicePoints),
+              const SizedBox(height: 12),
+
+              /// Two small maps/cards
+              Row(
+                children: [
+                  Expanded(
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.place_outlined, color: cs.primary),
+                          const SizedBox(height: 8),
+                          Text(
+                            kLabelHelpYouFindRTA,
+                            style: text.bodySmall?.copyWith(color: cs.outline),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppCard(
+                      child: AspectRatio(
+                        aspectRatio: 1.5,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: Icon(Icons.map_outlined, color: cs.primary),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ---------- Section title ----------
+class SectionTitle extends StatelessWidget {
+  const SectionTitle(this.text, {super.key});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context)
+          .textTheme
+          .titleMedium
+          ?.copyWith(fontWeight: FontWeight.w800),
+    );
+  }
+}
+
+/// ---------- Promo banner (uses AppCard) ----------
+class PromoBanner extends StatelessWidget {
+  const PromoBanner({
+    super.key,
+    required this.leadingIcon,
+    required this.title,
+    this.trailing,
+    this.onTap,
+  });
+
+  final IconData leadingIcon;
+  final String title;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+
+    return AppCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(leadingIcon, color: cs.onSurface),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(title, style: t.bodyMedium),
+          ),
+          if (trailing != null) const SizedBox(width: 12),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+  }
+}
+
+/// ---------- Notification icon with small badge ----------
+class _IconBadge extends StatelessWidget {
+  const _IconBadge({required this.icon, this.onTap});
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: onTap,
+          icon: Icon(icon, color: cs.onSurface),
+        ),
+        Positioned(
+          right: 8,
+          top: 8,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: cs.error,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

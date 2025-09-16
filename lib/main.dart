@@ -3,12 +3,16 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:eps_client/src/routing/go_router/go_router_delegate.dart';
 import 'package:eps_client/src/utils/fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import 'firebase_options.dart';
+import 'src/remote_config/firebase_remote_config.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -19,6 +23,7 @@ final ProviderContainer container = ProviderContainer();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await initializeDateFormatting('en_US');
   await GetStorage.init();
@@ -43,15 +48,25 @@ class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterDelegateProvider);
+    final themes = ref.watch(remoteThemesProvider);
+
+    ThemeData withFont(ThemeData base) => ThemeData(
+      useMaterial3: base.useMaterial3,
+      colorScheme: base.colorScheme,
+      fontFamily: kJaldi,
+    );
 
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       routeInformationParser: router.routeInformationParser,
       routeInformationProvider: router.routeInformationProvider,
       routerDelegate: router.routerDelegate,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue, fontFamily: kJaldi),
+      theme: withFont(themes.light),
+      darkTheme: withFont(themes.dark),
+      themeMode: ThemeMode.system,
     );
   }
 }
@@ -88,12 +103,12 @@ void registerErrorHandlers() {
 class CustomPageTransitionBuilder extends PageTransitionsBuilder {
   @override
   Widget buildTransitions<T>(
-      PageRoute<T> route,
-      BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,
-      Widget child,
-      ) {
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
     const begin = Offset(1.0, 0.0);
     const end = Offset.zero;
     const curve = Curves.easeInOut;

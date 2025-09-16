@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "568985103888",
+    "project_id": "eps-c2a0b",
+    "storage_bucket": "eps-c2a0b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568985103888:android:22fd51c6ce4756171f2495",
+        "android_client_info": {
+          "package_name": "com.eps.eps_client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW4U9n1Uit_Ri4W0uJ60kpPHpbUT4DODI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
