@@ -1,8 +1,10 @@
+import 'package:eps_client/src/features/upload_documents/presentation/upload_documents_page.dart';
 import 'package:eps_client/src/utils/strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../widgets/app_card_view.dart';
 import '../../../widgets/home_service_card_view.dart';
+import '../../notifications/presentation/notification_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -35,7 +37,13 @@ class HomePage extends StatelessWidget {
                   ),
                   _IconBadge(
                     icon: Icons.notifications_none_rounded,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                      );
+
+                    },
                   ),
                 ],
               ),
@@ -74,11 +82,17 @@ class HomePage extends StatelessWidget {
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 1.6,
-                children: const [
+                children:  [
                   ServiceCard(
                     icon: Icons.important_devices,
                     title: kLabelVisaPassportServices,
                     enabled: true,
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UploadDocumentsPage()),
+                      );
+                    },
                   ),
                   ServiceCard(
                     icon: Icons.work_outline,
@@ -120,28 +134,20 @@ class HomePage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.place_outlined, color: cs.primary),
-                          const SizedBox(height: 8),
-                          Text(
-                            kLabelHelpYouFindRTA,
-                            style: text.bodySmall?.copyWith(color: cs.outline),
-                          ),
+                          Row(children: [
+                            Icon(Icons.place_outlined, color: cs.primary,size: 40,),
+                            const SizedBox(width: 10),
+                            Text(
+                              kLabelHelpYouFindRTA,
+                              style: text.bodySmall?.copyWith(color: cs.outline),
+                            ),
+                          ],),
+                          Icon(Icons.map,size: 100,)
                         ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppCard(
-                      child: AspectRatio(
-                        aspectRatio: 1.5,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: Icon(Icons.map_outlined, color: cs.primary),
-                        ),
                       ),
                     ),
                   ),

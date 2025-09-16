@@ -23,3 +23,4 @@ const kLabelChatWithUs = "Chat with us";
 const kLabelFaqs = "FAQs";
 const kLabelTermAndCondition = "Terms& Conditions";
 const kLabelLogout = "Log out";
+const kLabelBack = "Back";

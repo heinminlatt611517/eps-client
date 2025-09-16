@@ -1,7 +1,10 @@
+import 'package:eps_client/src/features/service_request/presentation/service_request_page.dart';
 import 'package:eps_client/src/utils/strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../widgets/agent_card.dart';
+import '../../agent_details/model/agent_profile.dart';
+import '../../agent_details/presentation/agent_details_page.dart';
 import '../model/agent.dart';
 
 class AgentsPage extends StatelessWidget {
@@ -77,12 +80,6 @@ class AgentsPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(
-        title: const Text(''),
-        backgroundColor: cs.surface,
-        foregroundColor: cs.onSurface,
-        elevation: 0,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
@@ -109,22 +106,36 @@ class AgentsPage extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 2/2.1,
+                  childAspectRatio: 2 / 2.1,
                 ),
                 itemBuilder: (context, i) => AgentCard(
                   agent: agents[i],
                   onView: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Viewing ${agents[i].name}')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AgentDetailsPage(
+                          agent: const AgentProfile(
+                            name: 'John Doe',
+                            rating: 4.6,
+                            location: 'Bangkok, Thailand',
+                            languages: ['English', 'Thai'],
+                            experienceYears: 5,
+                            services: ['Passport Renewal', 'Visa Extension'],
+                          ),
+                          onServiceTap: (s) => debugPrint('Tap service: $s'),
+                          onViewCertification: () =>
+                              debugPrint('View certification'),
+                        ),
+                      ),
                     );
                   },
                   onRequest: agents[i].canRequest
                       ? () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Request sent to ${agents[i].name}',
-                              ),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ServiceRequestPage(),
                             ),
                           );
                         }

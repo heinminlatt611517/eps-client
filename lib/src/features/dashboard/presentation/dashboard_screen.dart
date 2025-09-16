@@ -9,7 +9,7 @@ import '../../home/presentation/home_page.dart';
 import '../controller/dashboard_controller.dart';
 import '../widget/bottom_navigation_widget.dart';
 
-///notification count provider
+///notifications count provider
 final notificationCountProvider = StateProvider<int>((ref) {
   return 0;
 });
