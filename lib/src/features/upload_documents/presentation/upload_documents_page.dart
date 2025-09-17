@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../../common_widgets/custom_app_bar_view.dart';
 import '../../confirm_document/presentation/confirm_document_page.dart';
+import 'mrz_live_sacnner_page.dart';
 
-class UploadDocumentsPage extends StatelessWidget {
-  const UploadDocumentsPage({
-    super.key,
-    this.title = 'Upload Passport/ Visa',
-  });
+class UploadDocumentsPage extends StatefulWidget {
+  const UploadDocumentsPage({super.key, this.title = 'Upload Passport/ Visa'});
 
   final String title;
 
+  @override
+  State<UploadDocumentsPage> createState() => _UploadDocumentsPageState();
+}
+
+class _UploadDocumentsPageState extends State<UploadDocumentsPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -25,29 +28,28 @@ class UploadDocumentsPage extends StatelessWidget {
             UploadActionTile(
               icon: Icons.document_scanner_outlined,
               label: 'Scan Document',
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ConfirmDocumentPage(
-                      details: DocumentDetails(
-                        passportNumber: 'MG123456',
-                        dateOfBirth: DateTime(1987, 9, 15),
-                        nationality: 'Myanmar',
-                        gender: 'Male',
-                        expiryDate: DateTime(2027, 9, 15),
-                      ),
+                    builder: (_) => LiveMrzScannerPage(
+                      onFound: (mrz) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => ConfirmDetailsPage(mrz: mrz),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 );
-
               },
             ),
             const SizedBox(height: 14),
             UploadActionTile(
               icon: Icons.upload_file_outlined,
               label: 'Upload File',
-              onTap: (){},
+              onTap: () {},
             ),
           ],
         ),

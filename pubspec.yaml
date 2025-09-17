@@ -59,6 +59,19 @@ dependencies:
   firebase_analytics: ^11.2.0
   firebase_remote_config: ^5.5.0
 
+  #image_picker:
+  image_picker: any
+
+  #google_mlkit_text_recognition:
+  google_mlkit_text_recognition: any
+  google_mlkit_commons: ^0.11.0
+
+  #camerawesome
+  camerawesome: ^2.5.0
+
+  #file_picker:
+  file_picker: ^10.3.3
+
 
   #intl:
   intl: ^0.20.2

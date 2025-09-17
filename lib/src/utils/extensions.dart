@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:camerawesome/camerawesome_plugin.dart';
+import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 extension SnackBarExtensions on BuildContext {
   void showSuccessSnackBar(String message) {
@@ -86,4 +88,36 @@ extension StringCasingExtension on String {
     return this[0].toUpperCase() + substring(1);
   }
 }
+
+
+extension MLKitInputImage on AnalysisImage {
+  InputImage toInputImage() {
+    final rotation =
+    InputImageRotation.values.byName(this.rotation.name); // 0/90/180/270
+
+    return when(
+      // ANDROID: NV21
+      nv21: (image) => InputImage.fromBytes(
+        bytes: image.bytes,
+        metadata: InputImageMetadata(
+          size: image.size,
+          rotation: rotation,
+          format: InputImageFormat.nv21,     // NV21
+          bytesPerRow: image.planes.first.bytesPerRow, // single plane
+        ),
+      ),
+      // iOS: BGRA8888
+      bgra8888: (image) => InputImage.fromBytes(
+        bytes: image.bytes,
+        metadata: InputImageMetadata(
+          size: image.size,
+          rotation: rotation,                    // not used by iOS conversion
+          format: InputImageFormat.bgra8888,     // BGRA
+          bytesPerRow: image.planes.first.bytesPerRow,
+        ),
+      ),
+    )!;
+  }
+}
+
 
