@@ -7,9 +7,11 @@ import 'package:eps_client/src/features/upload_documents/presentation/upload_doc
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../features/auth/presentations/login_page.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../utils/secure_storage.dart';
+import '../../utils/strings.dart';
 import '../route_error_screen/route_error_screen.dart';
 
 part 'go_router_delegate.g.dart';
@@ -18,7 +20,7 @@ enum RoutePath {
   initial(path: '/'),
   root(path: "root"),
   home(path: "home"),
-  login(path: '/login'),
+  login(path: '/presentations'),
   agents(path: '/agents'),
   serviceRequest(path: '/serviceRequest'),
   serviceStatus(path: '/serviceStatus'),
@@ -44,23 +46,43 @@ GoRouter goRouterDelegate(GoRouterDelegateRef ref) {
 
   return GoRouter(
     navigatorKey: rootNavigator,
-    initialLocation: '/',
+    initialLocation: RoutePath.login.path,
+    redirect: (context, state) {
+      final isLoggedIn = authStatus == kAuthLoggedIn;
+      final isGoingToLogin = state.matchedLocation == RoutePath.login.path;
+      final isGoingToSchoolCode = state.matchedLocation == RoutePath.login.path;
+
+      if (!isLoggedIn && !isGoingToLogin && !isGoingToSchoolCode) {
+        isDuplicate = true;
+        return RoutePath.login.path;
+      }
+      if (isLoggedIn && (isGoingToLogin || isGoingToSchoolCode)) {
+        isDuplicate = true;
+        return '/';
+      }
+
+      if (isDuplicate) {
+        isDuplicate = false;
+      }
+
+      return null;
+    },
+
     routes: [
-      // ///login page
-      // GoRoute(
-      //   path: RoutePath.login.path,
-      //   parentNavigatorKey: rootNavigator,
-      //   pageBuilder: (context, state) {
-      //     return buildPageWithDefaultTransition(
-      //         context: context,
-      //         state: state,
-      //         child: LoginPage(
-      //           key: state.pageKey,
-      //         ));
-      //   },
-      // ),
-      //
-      // ///home page
+      ///login page
+      GoRoute(
+        path: RoutePath.login.path,
+        parentNavigatorKey: rootNavigator,
+        pageBuilder: (context, state) {
+          return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: LoginPage(
+                key: state.pageKey,
+              ));
+        },
+      ),
+
       ///dashboard page
       ShellRoute(
         navigatorKey: shellNavigator,

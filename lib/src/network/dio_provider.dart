@@ -10,18 +10,21 @@ part 'dio_provider.g.dart';
 
 @riverpod
 Dio dio(DioRef ref) {
-  final token = GetStorage().read(SecureDataList.token.name);
-  debugPrint("BearerToken$token");
-  String tokenWithBearer = "Bearer ${token!}";
-  return Dio(
-    BaseOptions(
-        baseUrl: kBaseUrl,
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 5),
-        responseType: ResponseType.json,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": tokenWithBearer
-        }),
-  );
+  final token = GetStorage().read(SecureDataList.token.name) as String?;
+  final headers = <String, String>{
+    'Content-Type': 'application/json',
+    if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+  };
+
+  final client = Dio(BaseOptions(
+    baseUrl: kBaseUrl,
+    connectTimeout: const Duration(seconds: 12),
+    receiveTimeout: const Duration(seconds: 20),
+    responseType: ResponseType.json,
+    headers: headers,
+    validateStatus: (code) => code != null && code >= 100 && code < 600,
+    receiveDataWhenStatusError: true,
+  ));
+
+  return client;
 }

@@ -120,4 +120,16 @@ extension MLKitInputImage on AnalysisImage {
   }
 }
 
+extension ThemeContext on BuildContext {
+  ThemeData get theme => Theme.of(this);
+  ColorScheme get colors => theme.colorScheme;
+  TextTheme get text => theme.textTheme;
+
+  Color get primary => colors.primary;
+  Color get onPrimary => colors.onPrimary;
+
+  Color get secondary => colors.secondary;
+  Color get onSecondary => colors.onSecondary;
+}
+
 

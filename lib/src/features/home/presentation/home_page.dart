@@ -1,3 +1,4 @@
+import 'package:eps_client/src/features/job_opportunities/presentation/job_opportunities_page.dart';
 import 'package:eps_client/src/features/upload_documents/presentation/upload_documents_page.dart';
 import 'package:eps_client/src/utils/strings.dart';
 import 'package:flutter/material.dart';
@@ -98,6 +99,12 @@ class HomePage extends StatelessWidget {
                     icon: Icons.work_outline,
                     title: kLabelJobOpportunities,
                     enabled: true,
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const JobOpportunitiesPage()),
+                      );
+                    },
                   ),
                   ServiceCard(
                     icon: Icons.badge_outlined,

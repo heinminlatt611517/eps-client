@@ -1,9 +1,8 @@
+import 'package:eps_client/src/features/agents/model/availabel_agent_response.dart';
 import 'package:eps_client/src/utils/dimens.dart';
 import 'package:eps_client/src/utils/strings.dart';
-import 'package:eps_client/src/widgets/star_row_view.dart';
+import 'package:eps_client/src/widgets/rating_view.dart';
 import 'package:flutter/material.dart';
-
-import '../features/agents/model/agent.dart';
 
 /// Reusable card widget (parent style shared across items)
 class AgentCard extends StatelessWidget {
@@ -14,7 +13,7 @@ class AgentCard extends StatelessWidget {
     required this.onRequest,
   });
 
-  final Agent agent;
+  final AgentDataVO agent;
   final VoidCallback onView;
   final VoidCallback? onRequest;
 
@@ -50,7 +49,7 @@ class AgentCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      agent.name,
+                      agent.name ?? '',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: tt.titleSmall?.copyWith(
@@ -63,7 +62,7 @@ class AgentCard extends StatelessWidget {
               const SizedBox(height: 6),
 
               /// Rating stars
-              StarRow(rating: agent.rating),
+              RatingView(value: double.parse(agent.rating ?? '0.0'), size: 18, showValue: true),
               const SizedBox(height: 6),
 
               Text(
@@ -71,7 +70,7 @@ class AgentCard extends StatelessWidget {
                 style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               Text(
-                agent.location,
+                agent.location ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: tt.bodySmall?.copyWith(color: cs.outline),
@@ -90,7 +89,10 @@ class AgentCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(kLabelView,style: TextStyle(fontSize: kTextXSmall)),
+                      child: const Text(
+                        kLabelView,
+                        style: TextStyle(fontSize: kTextXSmall),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -103,7 +105,10 @@ class AgentCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(kLabelRequestService,style: TextStyle(fontSize: kTextXSmall),),
+                      child: const Text(
+                        kLabelRequestService,
+                        style: TextStyle(fontSize: kTextXSmall),
+                      ),
                     ),
                   ),
                 ],

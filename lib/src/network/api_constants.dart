@@ -1,5 +1,5 @@
 ///Base Url
-const String kBaseUrl = "https://hrapp.mocinteractive.com/api/v1";
+const String kBaseUrl = "https://eps.techysolutions.co/api";
 const String kImageBaseUrlHttp = "";
 
 ///Error image string
@@ -8,12 +8,10 @@ const String kErrorImageUrl =
 
 ///End points
 const String kEndPointLogin = "/login";
-const String kEndPointCheckIn = "/check-in";
-const String kEndPointCheckOut = "/check-out";
-const String kEndPointAttendanceList = "/attendance-list";
-const String kEndPointLeaveTypes = "/leave-types";
-const String kEndPointLeaveStatus = "/leaves";
-const String kEndPointCreateLeave = "/create-leave";
+const String kEndPointRegister = "/register";
+const String kEndPointAvailableAgents = "/available-agents";
+const String kEndPointAgentDetails = "/agent-detail";
+
 
 ///Parameters
 const String kParamApiKey = "api_key";

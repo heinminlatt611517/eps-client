@@ -1,3 +1,6 @@
+const kAuthLoggedOut = "LoggedOut";
+const kAuthNotLoggedIn = "NotSignedIn";
+const kAuthLoggedIn = "LoggedIn";
 const kLabelSearchServices = "Search services ....";
 const kLabelOurMostUsefulServices = "Our Most Useful Services";
 const kLabelExplore = "Explore";
