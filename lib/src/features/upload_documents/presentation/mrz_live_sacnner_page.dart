@@ -355,11 +355,11 @@ class _OverlayAlignedToPreview extends StatelessWidget {
       final mrzRect = Rect.fromLTWH(bandLeft, bandTop, bandW, bandH);
 
       return Stack(children: [
-        // Dim everything
+        /// Dim everything
         Container(color: const Color(0xAA000000)),
-        // Cut out the MRZ band + border
+        /// Cut out the MRZ band + border
         Positioned.fromRect(rect: mrzRect, child: CustomPaint(painter: _CutoutPainter())),
-        // Helper text
+        /// Helper text
         Positioned(
           left: 16, right: 16, bottom: 24,
           child: Text(

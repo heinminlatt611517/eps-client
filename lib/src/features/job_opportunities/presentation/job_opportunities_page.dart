@@ -1,4 +1,5 @@
 import 'package:eps_client/src/features/job_opportunities/model/job_item_vo.dart';
+import 'package:eps_client/src/features/submit_cv_page/submit_cv_page.dart';
 import 'package:eps_client/src/widgets/job_card_view.dart';
 import 'package:flutter/material.dart';
 
@@ -78,6 +79,10 @@ class _JobOpportunitiesPageState extends State<JobOpportunitiesPage> {
             const SizedBox(height: 8),
             _CvCallout(
               onSubmit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubmitCvPage()),
+                );
               },
             ),
           ],
