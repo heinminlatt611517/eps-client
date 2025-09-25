@@ -159,9 +159,8 @@ class _CameraIdOcrPageState extends State<CameraIdOcrPage> {
       if (!mounted) return;
       if (widget.onParsed != null) {
         widget.onParsed!(fields);
-        Navigator.of(context).maybePop(); // optional
+        Navigator.of(context).maybePop();
       } else {
-        // Show a quick result sheet if no callback provided.
         await showModalBottomSheet(
           context: context,
           isScrollControlled: true,

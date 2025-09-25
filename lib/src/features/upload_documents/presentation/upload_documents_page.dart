@@ -123,7 +123,11 @@ class _UploadDocumentsPageState extends State<UploadDocumentsPage> {
                   MaterialPageRoute(
                     builder: (_) => CameraIdOcrPage(
                       onParsed: (fields) {
-                        debugPrint("Fields>>>>>$fields");
+                        debugPrint("Id Number>>>>>${fields.idNumber}");
+                        debugPrint("Fields Name>>>>>${fields.name}");
+                        debugPrint("Date of birth>>>>>${fields.dateOfBirth}");
+                        debugPrint("Issue date>>>>>${fields.dateOfIssue}");
+                        debugPrint("Expire date>>>>>${fields.dateOfExpiry}");
                       },
                     ),
                   ),
