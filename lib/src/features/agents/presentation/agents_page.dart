@@ -89,18 +89,21 @@ class AgentsPage extends ConsumerWidget {
                   message: error.toString(),
                   onRetry: () => ref.invalidate(fetchAvailableAgentsProvider),
                 ),
-                loading: () => Center(
-                  child: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: LoadingIndicator(
-                      indicatorType: Indicator.ballBeat,
-                      strokeWidth: 2,
-                      backgroundColor: Colors.transparent,
-                      pathBackgroundColor: Colors.black,
+                loading: () => SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: LoadingIndicator(
+                        indicatorType: Indicator.ballBeat,
+                        colors: [Theme.of(context).colorScheme.primary],
+                        backgroundColor: Colors.transparent,
+                      ),
                     ),
                   ),
                 ),
+
               ),
             ],
           ),

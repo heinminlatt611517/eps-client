@@ -10,10 +10,10 @@ class ConfirmDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final firstName = _firstGivenName(mrz.secondaryIdentifier);
+    final firstName = _firstGivenName(mrz.secondaryIdentifier ?? '');
     final lastName = mrz.primaryIdentifier;
-    final nationality = _iso3ToName(mrz.nationality);
-    final gender = _prettySex(mrz.sex);
+    final nationality = _iso3ToName(mrz.nationality ?? '');
+    final gender = _prettySex(mrz.sex ?? '');
 
     return Scaffold(
       appBar: CustomAppBarView(title: 'Confirm Details'),
@@ -40,12 +40,12 @@ class ConfirmDetailsPage extends StatelessWidget {
 
               _ReadonlyField(
                 label: 'Passport Number',
-                value: mrz.documentNumber,
+                value: mrz.documentNumber ?? '',
               ),
               const SizedBox(height: 10),
               _ReadonlyField(label: 'First Name', value: firstName),
               const SizedBox(height: 10),
-              _ReadonlyField(label: 'Last Name', value: lastName),
+              _ReadonlyField(label: 'Last Name', value: lastName ?? ''),
               const SizedBox(height: 10),
               _ReadonlyField(
                 label: 'Date of Birth',

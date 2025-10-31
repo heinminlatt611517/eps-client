@@ -102,7 +102,7 @@ class _HomeScreenState extends ConsumerState<DashboardScreen>
       ),
       bottomNavigationBar: Theme(
         data: Theme.of(context)
-            .copyWith(canvasColor: context.kPrimaryColor, primaryColor: Colors.white),
+            .copyWith(canvasColor: Color(0xFFe4e4e4), primaryColor: Colors.white),
         child: const BottomNavigationWidget(),
       ),
     );

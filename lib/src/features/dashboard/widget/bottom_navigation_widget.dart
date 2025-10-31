@@ -22,7 +22,7 @@ class _BottomNavigationWidgetState
     final position = ref.watch(dashboardControllerProvider);
 
     return BottomNavigationBar(
-      unselectedItemColor: Colors.white,
+      unselectedItemColor: Colors.black,
       selectedItemColor: context.kSecondaryColor,
       showSelectedLabels: true,
       showUnselectedLabels: true,
@@ -37,28 +37,28 @@ class _BottomNavigationWidgetState
           icon: Icon(
               size: 30,
               Icons.home,
-              color: position == 0 ? context.kSecondaryColor : Colors.white),
+              color: position == 0 ? context.kSecondaryColor : Colors.black),
           label: 'Home',
         ),
         BottomNavigationBarItem(
           icon: Icon(
               size: 30,
               Icons.real_estate_agent_outlined,
-              color: position == 1 ? context.kSecondaryColor : Colors.white),
+              color: position == 1 ? context.kSecondaryColor : Colors.black),
           label: 'Agents',
         ),
         BottomNavigationBarItem(
           icon: Icon(
               size: 26,
               Icons.home_repair_service,
-              color: position == 2 ? context.kSecondaryColor : Colors.white),
+              color: position == 2 ? context.kSecondaryColor : Colors.black),
           label: 'Service Status',
         ),
         BottomNavigationBarItem(
           icon: Icon(
               size: 30,
               Icons.more_horiz,
-              color: position == 3 ? context.kSecondaryColor : Colors.white),
+              color: position == 3 ? context.kSecondaryColor : Colors.black),
           label: 'More',
         ),
       ],

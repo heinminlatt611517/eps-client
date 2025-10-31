@@ -11,6 +11,7 @@ const String kEndPointLogin = "/login";
 const String kEndPointRegister = "/register";
 const String kEndPointAvailableAgents = "/available-agents";
 const String kEndPointAgentDetails = "/agent-detail";
+const String kEndPointPostRequestService = "/request-service";
 
 
 ///Parameters

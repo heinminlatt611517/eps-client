@@ -29,14 +29,24 @@ class _LiveMrzScannerPageState extends State<LiveMrzScannerPage>
 
   DateTime _lastScan = DateTime.fromMillisecondsSinceEpoch(0);
   bool _busy = false;
+  AnimationController? _pulse;
 
-  late final AnimationController _pulse =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
-    ..repeat(reverse: true);
+  // late final AnimationController _pulse =
+  // AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
+  //   ..repeat(reverse: true);
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _pulse?.dispose();
     _recognizer.close();
     super.dispose();
   }
@@ -120,9 +130,10 @@ class _LiveMrzScannerPageState extends State<LiveMrzScannerPage>
         if (mrz != null) {
           if (mounted) {
             widget.onFound?.call(mrz);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('MRZ detected: ${mrz.documentNumber}')),
-            );
+            Navigator.pop(context);
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(content: Text('MRZ detected: ${mrz.documentNumber}')),
+            // );
           }
         }
       }

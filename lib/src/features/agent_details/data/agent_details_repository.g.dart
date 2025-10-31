@@ -27,7 +27,7 @@ final agentDetailsRepositoryProvider =
 typedef AgentDetailsRepositoryRef =
     AutoDisposeProviderRef<AgentDetailsRepository>;
 String _$fetchAgentDetailsByIdHash() =>
-    r'465f2989590c9d50b2e5ed48b6354fe5ac3420c6';
+    r'c1c5b7037324785481a10247ecc1510e9ed299f7';
 
 /// Copied from Dart SDK
 class _SystemHash {
