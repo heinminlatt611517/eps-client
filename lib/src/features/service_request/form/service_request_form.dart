@@ -20,6 +20,7 @@ class ServiceRequestForm {
   /// Step 4 (review)
   final String? note;
   final bool agree;
+  final bool agreeTerm;
 
   const ServiceRequestForm({
     this.serviceId,
@@ -35,6 +36,7 @@ class ServiceRequestForm {
     this.documents = const [],
     this.note,
     this.agree = false,
+    this.agreeTerm = false
   });
 
   ServiceRequestForm copyWith({
@@ -51,6 +53,7 @@ class ServiceRequestForm {
     List<ServiceDoc>? documents,
     String? note,
     bool? agree,
+    bool? agreeTerm,
   }) {
     return ServiceRequestForm(
       serviceId: serviceId ?? this.serviceId,
@@ -66,6 +69,7 @@ class ServiceRequestForm {
       documents: documents ?? this.documents,
       note: note ?? this.note,
       agree: agree ?? this.agree,
+      agreeTerm: agreeTerm ?? this.agreeTerm,
     );
   }
 
@@ -89,11 +93,46 @@ class ServiceRequestForm {
           _hasGender &&
           _hasExpiry;
 
+  bool get _validNationality {
+    if (!_hasNationality) return false;
+    final n = nationality!.trim().toLowerCase();
+    const allowedNames = {
+      'myanmar',
+      'thailand',
+      'united states',
+      'united kingdom',
+      'france',
+      'germany',
+      'china',
+      'japan',
+      'south korea',
+      'india',
+    };
+    return allowedNames.contains(n);
+  }
+
+  bool get genderValid {
+    final g = (gender ?? '').trim().toLowerCase();
+    if (g.isEmpty) return false;
+    if (g == 'm' || g == 'male') return true;
+    if (g == 'f' || g == 'female') return true;
+    if (g == 'o' || g == 'other' || g == 'others' ||
+        g == 'non-binary' || g == 'nonbinary' || g == 'nb') {
+      return true;
+    }
+    return false;
+  }
+  bool get hasGenderError =>
+      !genderValid && (gender?.trim().isNotEmpty ?? false);
+
+
   /// step gating
-  bool get canProceedFromChoose           => serviceId != null;
+  bool get canProceedFromChoose           => serviceId != null && agreeTerm;
   bool get canProceedFromUploadDocs       => personalComplete;
   bool get canProceedFromUploadSupporting => documents.isNotEmpty;
   bool get canSubmit                      => agree;
+  bool get nationalityValid => _validNationality;
+  bool get hasNationalityError => !_validNationality;
 
   /// ---------- payload ----------
   String get _fullName =>

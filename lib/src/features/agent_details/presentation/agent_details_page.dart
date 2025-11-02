@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 import '../../../common_widgets/custom_app_bar_view.dart';
-import '../../../utils/dimens.dart';
 import '../../../widgets/error_tetry_view.dart';
 class AgentDetailsPage extends ConsumerWidget {
   const AgentDetailsPage({
@@ -37,12 +36,12 @@ class AgentDetailsPage extends ConsumerWidget {
             data: (agent) {
 
               final name = agent.data?.name ?? 'Agent';
-              final rating =  0.0;
+              final rating =  agent.data?.rating;
               final location = agent.data?.location ?? 'Location';
               // final languages = (agent.data?.languages ?? const <String>[]).join(', ');
               //final languagesLabel = languages.isEmpty ? 'Speak language' : languages;
               final experienceYears = 1;
-              final services = const <String>[];
+              final services = agent.data?.services?.map((e)=> e.title).toList();
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +63,7 @@ class AgentDetailsPage extends ConsumerWidget {
                         const SizedBox(height: 12),
                         Text(name, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                         const SizedBox(height: 4),
-                        _RatingRow(rating: rating),
+                        _RatingRow(rating: double.parse(rating.toString())),
                       ],
                     ),
                   ),
@@ -77,52 +76,55 @@ class AgentDetailsPage extends ConsumerWidget {
                   const SizedBox(height: 8),
                   _InfoRow(
                     icon: Icons.badge_outlined,
-                    text: experienceYears != null ? '$experienceYears years experience' : 'Experience',
+                    text: '$experienceYears years experience',
                   ),
                   const SizedBox(height: 12),
 
                   /// -------- services chips/buttons ----------
-                  if (services.isNotEmpty)
+                  if (services?.isNotEmpty ?? true)
                     Wrap(
                       spacing: 12,
                       runSpacing: 10,
-                      children: services.map((s) {
+                      children: services?.map((s) {
                         return FilledButton(
-                          onPressed: () => onServiceTap?.call(s),
+                          onPressed: () => onServiceTap?.call(s ?? ''),
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: Text(s),
+                          child: Text(s ?? ''),
                         );
-                      }).toList(),
+                      }).toList() ?? [],
                     ),
 
                   const SizedBox(height: 12),
+                  //const _SectionDivider(),
+                  // Text('Documents/ Licenses', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  // const SizedBox(height: 10),
+                  // Row(
+                  //   children: [
+                  //     const Icon(Icons.verified_user, color: Colors.green),
+                  //     const SizedBox(width: 8),
+                  //     Text('Verified', style: tt.bodyMedium?.copyWith(color: Colors.green)),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 6),
+                  // TextButton(onPressed: onViewCertification, child: const Text('View certification')),
+                  //
+                  // const SizedBox(height: 8),
                   const _SectionDivider(),
 
 
-                  Text('Documents/ Licenses', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.verified_user, color: Colors.green),
-                      const SizedBox(width: 8),
-                      Text('Verified', style: tt.bodyMedium?.copyWith(color: Colors.green)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  TextButton(onPressed: onViewCertification, child: const Text('View certification')),
-
-                  const SizedBox(height: 8),
-                  const _SectionDivider(),
+                  Visibility(
+                      visible: agent.data?.reviews?.isNotEmpty ?? true,
+                      child: Text('Reviews', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+                  ListView.separated(
+                      shrinkWrap: true,
+                      itemBuilder: (context,i){
+                    return _SkeletonCard(height: 100, comment: agent.data?.reviews?[i].comment ?? '');
+                  }, separatorBuilder : (_, __) => const SizedBox(height: 10), itemCount: agent.data?.reviews?.length ?? 0)
 
 
-                  Text('Reviews', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 10),
-                  const _SkeletonCard(height: 100),
-                  const SizedBox(height: 10),
-                  const _SkeletonCard(height: 100),
                 ],
               );
             },
@@ -237,8 +239,8 @@ class _SectionDivider extends StatelessWidget {
 
 ///card view
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard({required this.height});
-
+  const _SkeletonCard({required this.height,required this.comment});
+  final String comment;
   final double height;
 
   @override
@@ -249,6 +251,10 @@ class _SkeletonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceVariant.withOpacity(.5),
         borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(comment),
       ),
     );
   }

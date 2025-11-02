@@ -1,27 +1,29 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'service_request_controller.dart';
+part of 'upload_cv_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$serviceRequestControllerHash() =>
-    r'9f6e70210e258c08db200a1f70d7b060cb0f80cc';
+String _$uploadCVRepositoryHash() =>
+    r'44a53fe6f6cad2a54d76e0bf7e530b3222c82187';
 
-/// See also [ServiceRequestController].
-@ProviderFor(ServiceRequestController)
-final serviceRequestControllerProvider =
-    AutoDisposeAsyncNotifierProvider<ServiceRequestController, void>.internal(
-      ServiceRequestController.new,
-      name: r'serviceRequestControllerProvider',
+/// See also [uploadCVRepository].
+@ProviderFor(uploadCVRepository)
+final uploadCVRepositoryProvider =
+    AutoDisposeProvider<UploadCVRepository>.internal(
+      uploadCVRepository,
+      name: r'uploadCVRepositoryProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$serviceRequestControllerHash,
+          : _$uploadCVRepositoryHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$ServiceRequestController = AutoDisposeAsyncNotifier<void>;
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef UploadCVRepositoryRef = AutoDisposeProviderRef<UploadCVRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

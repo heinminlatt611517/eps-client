@@ -1,12 +1,12 @@
+import 'package:eps_client/src/features/job_opportunities/model/jobs_response.dart';
+import 'package:eps_client/src/utils/extensions.dart';
 import 'package:flutter/material.dart';
-
-import '../features/job_opportunities/model/job_item_vo.dart';
 
 /// JOB CARD
 class JobCardView extends StatelessWidget {
-  const JobCardView({required this.job, this.onView});
+  const JobCardView({super.key, required this.job, this.onView});
 
-  final JobItemVO job;
+  final JobVO job;
   final VoidCallback? onView;
 
   @override
@@ -22,14 +22,14 @@ class JobCardView extends StatelessWidget {
       ),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           /// Left: job info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(job.title,
+                Text(job.title ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
@@ -38,13 +38,11 @@ class JobCardView extends StatelessWidget {
                   children: [
                     const Icon(Icons.place_outlined, size: 18),
                     const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        job.city,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodyMedium,
-                      ),
+                    Text(
+                      job.location ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodyMedium,
                     ),
                     const SizedBox(width: 6),
                     Text('• ${job.type}',
@@ -68,8 +66,7 @@ class JobCardView extends StatelessWidget {
             child: FilledButton(
               onPressed: onView,
               style: FilledButton.styleFrom(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

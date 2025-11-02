@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
+import '../features/job_opportunities/model/jobs_response.dart';
+
 extension SnackBarExtensions on BuildContext {
   void showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(this).showSnackBar(
@@ -130,6 +132,14 @@ extension ThemeContext on BuildContext {
 
   Color get secondary => colors.secondary;
   Color get onSecondary => colors.onSecondary;
+}
+
+extension JobVoX on JobVO {
+  int get postedDaysAgo {
+    final d = createdAt ?? updatedAt;
+    if (d == null) return 0;
+    return DateTime.now().difference(d).inDays.clamp(0, 36500);
+  }
 }
 
 

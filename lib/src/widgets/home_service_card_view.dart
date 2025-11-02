@@ -6,13 +6,13 @@ import 'app_card_view.dart';
 class ServiceCard extends StatelessWidget {
   const ServiceCard({
     super.key,
-    required this.icon,
+    required this.imageName,
     required this.title,
     this.enabled = true,
     this.onTap,
   });
 
-  final IconData icon;
+  final String imageName;
   final String title;
   final bool enabled;
   final VoidCallback? onTap;
@@ -32,13 +32,11 @@ class ServiceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
             decoration: BoxDecoration(
               color: cs.primary.withOpacity(.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: cs.onSurface),
+            child: Image.asset(imageName,height: 30,width: 30,fit: BoxFit.cover,),
           ),
           const SizedBox(width: 10),
           Expanded(

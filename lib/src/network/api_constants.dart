@@ -12,7 +12,10 @@ const String kEndPointRegister = "/register";
 const String kEndPointAvailableAgents = "/available-agents";
 const String kEndPointAgentDetails = "/agent-detail";
 const String kEndPointPostRequestService = "/request-service";
-
+const String kEndPointGetJobs = "/jobs";
+const String kEndPointUploadCV = "/upload-cv";
+const String kEndPointGetAllCustomerServiceStatus = "/customer-services-list";
+const String kEndPointServiceStatusDetails = "/customer-service-detail";
 
 ///Parameters
 const String kParamApiKey = "api_key";

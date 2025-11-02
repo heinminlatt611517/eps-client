@@ -107,6 +107,7 @@ class AgentCard extends StatelessWidget {
                       ),
                       child: const Text(
                         kLabelRequestService,
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: kTextXSmall),
                       ),
                     ),

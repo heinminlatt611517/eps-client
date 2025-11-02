@@ -1,74 +1,98 @@
+import 'package:eps_client/src/features/service_status/data/service_status_repository.dart';
+import 'package:eps_client/src/features/service_status/presentation/service_status_details_page.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 
-class ServiceStatusPage extends StatelessWidget {
+import '../../../widgets/error_tetry_view.dart';
+
+class ServiceStatusPage extends ConsumerWidget {
   const ServiceStatusPage({
     super.key,
-    this.serviceName,
-    this.agentName,
-    this.priceLabel,
-    this.currentStage,
-    this.updates = const [],
   });
 
-  final String? serviceName;
-  final String? agentName;
-  final String? priceLabel;
-  final StatusStage? currentStage;
-  final List<StatusUpdate> updates;
-
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme
+        .of(context)
+        .colorScheme;
+    final tt = Theme
+        .of(context)
+        .textTheme;
 
-    final stage = currentStage ?? StatusStage.processing;
+    ///provider states
+    final customerServiceStatusState = ref.watch(
+        fetchAllCustomerServiceStatusProvider);
 
     return Scaffold(
+      backgroundColor: cs.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               Text('Service Status',
                   style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
               const SizedBox(height: 10),
 
-              // Details card
-              _ServiceCard(
-                title: serviceName ?? 'Service Name',
-                subtitle: agentName ?? 'Agent Name',
-                priceLabel: priceLabel ?? '\$ 200',
+              /// Grid of agent cards
+              customerServiceStatusState.when(
+                data: (customerServices) {
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: customerServices.data?.length ?? 0,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) {
+                      final item = customerServices.data![i]; // your mapped VO
+                      return _CustomerServiceTile(
+                        serviceName: item.serviceName ?? '-',
+                        agentName: item.agentName ?? '-',
+                        cost: item.serviceCost ?? '0',
+                        status: item.status ?? 0,
+                        updatedAt: item.updatedAt, // DateTime? or String? (see tile)
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ServiceStatusDetailsPage(id: customerServices.data?[i].id,),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                error: (error, stackTrace) =>
+                    ErrorRetryView(
+                      title: 'Error loading customer service status list',
+                      message: error.toString(),
+                      onRetry: () =>
+                          ref.invalidate(fetchAllCustomerServiceStatusProvider),
+                    ),
+                loading: () =>
+                    SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: LoadingIndicator(
+                            indicatorType: Indicator.ballBeat,
+                            colors: [Theme
+                                .of(context)
+                                .colorScheme
+                                .primary
+                            ],
+                            backgroundColor: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
               ),
-              const SizedBox(height: 16),
-
-              // Step progress
-              _StageProgress(current: stage),
-              const SizedBox(height: 8),
-
-              Center(
-                child: Text(
-                  stage.label,
-                  style:
-                  tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Text('Updates',
-                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 12),
-
-              if (updates.isEmpty) ...[
-                Text('No updates yet',
-                    style: tt.bodyMedium?.copyWith(color: cs.outline)),
-              ] else ...[
-                for (final u in updates) ...[
-                  _UpdateTile(update: u),
-                  const SizedBox(height: 16),
-                ],
-              ],
             ],
           ),
         ),
@@ -77,179 +101,126 @@ class ServiceStatusPage extends StatelessWidget {
   }
 }
 
-/// ───────────────────── Models & helpers ─────────────────────
+  Widget _CustomerServiceTile({
+    required String serviceName,
+    required String agentName,
+    required String cost,
+    required int status,
+    dynamic updatedAt,
+    VoidCallback? onTap,
+  }) {
+    return Builder(builder: (context) {
+      final cs = Theme.of(context).colorScheme;
+      final tt = Theme.of(context).textTheme;
 
-enum StatusStage { received, processing, readyForPickup, completed }
+      String _fmtDate(dynamic v) {
+        DateTime? d;
+        if (v is DateTime) d = v;
+        if (v is String) {
+          d = DateTime.tryParse(v);
+        }
+        if (d == null) return '-';
+        const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return '${d.day.toString().padLeft(2, '0')} ${m[d.month - 1]} ${d.year}';
+      }
 
-extension on StatusStage {
-  String get label => switch (this) {
-    StatusStage.received => 'Received',
-    StatusStage.processing => 'In Progress',
-    StatusStage.readyForPickup => 'Ready for Pickup',
-    StatusStage.completed => 'Completed',
-  };
-}
+      String _statusLabel(int s) => s == 1 ? 'Active' : 'Inactive';
+      Color _statusColor(int s) => s == 1 ? const Color(0xFF50B463) : cs.outline;
 
-/// Update item
-class StatusUpdate {
-  final String? title;
-  final DateTime? time;
-  const StatusUpdate({this.title, this.time});
-
-  String timeAgo() {
-    final t = time ?? DateTime.now();
-    final now = DateTime.now();
-    final diff = now.difference(t);
-
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
-    if (diff.inHours < 24) return '${diff.inHours} hours ago';
-
-    final yesterday = DateTime(now.year, now.month, now.day - 1);
-    final dayOnly = DateTime(t.year, t.month, t.day);
-    if (dayOnly == yesterday) return 'Yesterday';
-    return DateFormat.MMMMd().format(t);
-  }
-}
-
-/// ───────────────────── UI pieces ─────────────────────
-
-///service card view
-class _ServiceCard extends StatelessWidget {
-  const _ServiceCard({
-    required this.title,
-    required this.subtitle,
-    required this.priceLabel,
-  });
-
-  final String title;
-  final String subtitle;
-  final String priceLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Ink(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
             decoration: BoxDecoration(
-              color: cs.surfaceVariant.withOpacity(.5),
+              color: cs.surface,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                /// Left: icon box
+                Container(
+                  width: 54,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceVariant.withOpacity(.35),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.assignment_turned_in_outlined),
+                ),
+                const SizedBox(width: 12),
+
+                /// Middle: info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// Service name
+                      Text(
+                        serviceName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+
+                      /// Agent + cost
+                      Row(
+                        children: [
+                          const Icon(Icons.person_outline, size: 16),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              agentName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.bodyMedium,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text('\u0E3F $cost',
+                              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+
+                      /// Date + status chip
+                      Row(
+                        children: [
+                          Text('Updated ${_fmtDate(updatedAt)}',
+                              style: tt.bodySmall?.copyWith(color: cs.outline)),
+                          const Spacer(),
+                          // Container(
+                          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          //   decoration: BoxDecoration(
+                          //     color: _statusColor(status).withOpacity(.12),
+                          //     borderRadius: BorderRadius.circular(999),
+                          //     border: Border.all(color: _statusColor(status)),
+                          //   ),
+                          //   child: Text(
+                          //     _statusLabel(status),
+                          //     style: tt.labelSmall?.copyWith(
+                          //       color: _statusColor(status),
+                          //       fontWeight: FontWeight.w700,
+                          //     ),
+                          //   ),
+                          // ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+                const Icon(Icons.chevron_right_rounded),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DefaultTextStyle(
-              style: tt.bodyMedium!,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style:
-                      tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: tt.bodyMedium?.copyWith(color: cs.outline)),
-                ],
-              ),
-            ),
-          ),
-          Text(priceLabel, style: tt.titleMedium),
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
-}
 
-///state progress view
-class _StageProgress extends StatelessWidget {
-  const _StageProgress({required this.current});
-  final StatusStage current;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final labels = const [
-      'Received',
-      'Processing',
-      'Ready for Pickup',
-      'Completed',
-    ];
-
-    int idx = StatusStage.values.indexOf(current);
-
-    Widget dot(bool active) => Container(
-      width: 16,
-      height: 16,
-      decoration: BoxDecoration(
-        color: active ? cs.onPrimary : cs.surface,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: active ? cs.primary : cs.outlineVariant,
-          width: 6,
-        ),
-      ),
-    );
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(4, (i) => dot(i <= idx)),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(
-            4,
-                (i) => SizedBox(
-              width: MediaQuery.of(context).size.width / 5.6,
-              child: Text(
-                labels[i],
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: cs.outline),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-///update tile view
-class _UpdateTile extends StatelessWidget {
-  const _UpdateTile({required this.update});
-  final StatusUpdate update;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          update.title ?? '—',
-          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 4),
-        Text(update.timeAgo(), style: tt.bodySmall?.copyWith(color: cs.outline)),
-      ],
-    );
-  }
-}

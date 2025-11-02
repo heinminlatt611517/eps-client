@@ -1,25 +1,33 @@
 import 'dart:io';
 
+import 'package:eps_client/src/features/agent_details/model/agent_details_response.dart';
 import 'package:eps_client/src/features/service_request/controller/service_request_controller.dart';
 import 'package:eps_client/src/utils/async_value_ui.dart';
+import 'package:eps_client/src/utils/gap.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:eps_client/src/common_widgets/custom_app_bar_view.dart';
-import 'package:eps_client/src/features/agents/model/availabel_agent_response.dart';
 import 'package:eps_client/src/utils/dimens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:path/path.dart' as p;
 import '../../../common_widgets/personal_detail_input_field.dart';
+import '../../../widgets/error_tetry_view.dart';
 import '../../../widgets/loading_view.dart';
+import '../../agent_details/data/agent_details_repository.dart';
+import '../../dashboard/controller/dashboard_controller.dart';
+import '../../dashboard/presentation/dashboard_screen.dart';
 import '../../upload_documents/model/passport_mrz_vo.dart';
 import '../../upload_documents/presentation/camera_id_ocr_page.dart';
 import '../../upload_documents/presentation/mrz_live_sacnner_page.dart';
 import '../../upload_documents/presentation/upload_documents_page.dart';
 import '../form/service_request_form_notifier.dart';
+import '../mode/country_data_vo.dart';
 
 class ServiceRequestPage extends ConsumerStatefulWidget {
-  const ServiceRequestPage({super.key});
+  final int? agentID;
+
+  const ServiceRequestPage({super.key, this.agentID});
 
   @override
   ConsumerState<ServiceRequestPage> createState() => _ServiceRequestPageState();
@@ -30,40 +38,15 @@ enum StepStage { choose, uploadDocs, uploadSupporting, review }
 class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
   StepStage _step = StepStage.choose;
 
-  AgentDataVO? _agent;
-  Service? _service;
+  AgentDetail? _agent;
+  ServiceVO? _service;
   bool _manualEntry = false;
   bool _isSuccessService = false;
 
   final notes = TextEditingController();
   bool _agree = false;
+  bool _agreeTerm = false;
 
-  /// sample data
-  final agents = [
-    AgentDataVO(name: 'John Doe', rating: '4.6'),
-    AgentDataVO(name: 'Jane Smith', rating: '4.8'),
-    AgentDataVO(name: 'Alex Lee', rating: '4.5'),
-  ];
-  final services = const [
-    Service(
-      name: 'Visa Extension',
-      detail: 'Statesvice',
-      duration: '3-5 working days',
-      costUsd: 150,
-    ),
-    Service(
-      name: 'Passport Renewal',
-      detail: 'Processing',
-      duration: '5-7 working days',
-      costUsd: 120,
-    ),
-    Service(
-      name: 'Work Permit',
-      detail: 'Permit filing & issue',
-      duration: '7-10 working days',
-      costUsd: 180,
-    ),
-  ];
   final docs = <DocItem>[
     DocItem(title: 'TM 7 Form'),
     DocItem(title: 'TM 30 Receipt'),
@@ -92,6 +75,11 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     _nationalityCtrl = TextEditingController();
     _genderCtrl = TextEditingController();
     _expiryCtrl = TextEditingController();
+    _wireNationalityValidation();
+    _genderCtrl.addListener(_onGenderChanged);
+    _genderFocus.addListener(() {
+      if (!_genderFocus.hasFocus) _validateAndSetGender();
+    });
     super.initState();
   }
 
@@ -105,7 +93,104 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     _nationalityCtrl.dispose();
     _genderCtrl.dispose();
     _expiryCtrl.dispose();
+    _disposeNationalityValidation();
+    _genderCtrl.removeListener(_onGenderChanged);
+    _genderCtrl.dispose();
+    _genderFocus.dispose();
     super.dispose();
+  }
+
+  ///validation for nationality
+  final _nationalityFocus = FocusNode();
+  String? _nationalityError;
+
+
+  void _wireNationalityValidation() {
+    _nationalityFocus.addListener(() {
+      if (!_nationalityFocus.hasFocus) {
+        _validateAndSetNationality();
+      }
+    });
+  }
+
+  void _disposeNationalityValidation() {
+    _nationalityFocus.dispose();
+    _nationalityCtrl.dispose();
+  }
+
+  String _norm(String s) => s.trim().toLowerCase();
+
+  bool _isValidCountry(String input) {
+    final q = _norm(input);
+    if (q.isEmpty) return false;
+    return countries.any((c) {
+      final name = _norm(c.name ?? '');
+      final iso3 = _norm(c.iso3 ?? '');
+      return name == q || iso3 == q;
+    });
+  }
+
+  void _validateAndSetNationality() {
+    final v = _nationalityCtrl.text;
+    final ok = _isValidCountry(v);
+
+    setState(() {
+      _nationalityError = ok ? null : 'Please enter a valid country name.';
+    });
+
+    ref.read(serviceRequestFormNotifierProvider.notifier)
+        .setPersonal(nationality: ok ? v.trim() : null);
+  }
+
+
+  ///validation for gender
+  final _genderFocus = FocusNode();
+  String? _genderError;
+
+  void _disposeGenderValidation() {
+    _genderFocus.dispose();
+    _genderCtrl.dispose();
+  }
+
+  String? _canonGender(String input) {
+    final q = input.trim().toLowerCase();
+    if (q.isEmpty) return null;
+    if (q == 'm' || q == 'male') return 'Male';
+    if (q == 'f' || q == 'female') return 'Female';
+    if (q == 'o' || q == 'other' || q == 'others'
+        || q == 'non-binary' || q == 'nonbinary' || q == 'nb') return 'Other';
+    return null;
+  }
+
+  void _onGenderChanged() {
+    final canon = _canonGender(_genderCtrl.text);
+    ref.read(serviceRequestFormNotifierProvider.notifier)
+        .setPersonal(gender: canon);
+
+    setState(() {
+      _genderError = (canon == null && _genderCtrl.text.trim().isNotEmpty)
+          ? 'Please enter Male / Female / Other.'
+          : null;
+    });
+  }
+
+  void _wireGenderValidation() {
+    _genderFocus.addListener(() {
+      if (!_genderFocus.hasFocus) _validateAndSetGender();
+    });
+  }
+
+  void _validateAndSetGender() {
+    final canon = _canonGender(_genderCtrl.text);
+    setState(() {
+      if (_genderCtrl.text.trim().isEmpty) {
+        _genderError = 'Gender is required.';
+      } else {
+        _genderError = (canon == null) ? 'Please enter Male / Female / Other.' : null;
+      }
+    });
+    ref.read(serviceRequestFormNotifierProvider.notifier)
+        .setPersonal(gender: canon);
   }
 
   /// ---------------- helpers ----------------
@@ -114,11 +199,16 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
   bool get _canNext {
     final form = ref.watch(serviceRequestFormNotifierProvider);
 
+    debugPrint("GenderValidate>>>>${form.genderValid}");
     switch (_step) {
-      case StepStage.choose:            return form.canProceedFromChoose;
-      case StepStage.uploadDocs:        return form.canProceedFromUploadDocs;
-      case StepStage.uploadSupporting:  return form.canProceedFromUploadSupporting;
-      case StepStage.review:            return form.canSubmit;
+      case StepStage.choose:
+        return form.canProceedFromChoose;
+      case StepStage.uploadDocs:
+        return form.canProceedFromUploadDocs;
+      case StepStage.uploadSupporting:
+        return form.canProceedFromUploadSupporting;
+      case StepStage.review:
+        return form.canSubmit;
     }
   }
 
@@ -132,15 +222,17 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     });
 
     if (_manualEntry) {
-      ref.read(serviceRequestFormNotifierProvider.notifier).setPersonal(
-        number:     _passportCtrl.text.trim(),
-        firstName:  _firstNameCtrl.text.trim(),
-        lastName:   _lastNameCtrl.text.trim(),
-        dob:        _parseDmy(_dobCtrl.text),
-        nationality:_nationalityCtrl.text.trim(),
-        gender:     _genderCtrl.text.trim(),
-        expiryDate: _parseDmy(_expiryCtrl.text),
-      );
+      ref
+          .read(serviceRequestFormNotifierProvider.notifier)
+          .setPersonal(
+            number: _passportCtrl.text.trim(),
+            firstName: _firstNameCtrl.text.trim(),
+            lastName: _lastNameCtrl.text.trim(),
+            dob: _parseDmy(_dobCtrl.text),
+            nationality: _nationalityCtrl.text.trim(),
+            gender: _genderCtrl.text.trim(),
+            expiryDate: _parseDmy(_expiryCtrl.text),
+          );
     }
   }
 
@@ -189,8 +281,18 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     final p = s.trim().split(RegExp(r'\s+'));
     if (p.length != 3) return DateTime.now();
     const months = {
-      'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,
-      'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12
+      'Jan': 1,
+      'Feb': 2,
+      'Mar': 3,
+      'Apr': 4,
+      'May': 5,
+      'Jun': 6,
+      'Jul': 7,
+      'Aug': 8,
+      'Sep': 9,
+      'Oct': 10,
+      'Nov': 11,
+      'Dec': 12,
     };
     final d = int.tryParse(p[0]) ?? 1;
     final m = months[p[1]] ?? 1;
@@ -208,7 +310,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     ///show error dialog when network response error
     ref.listen<AsyncValue>(
       serviceRequestControllerProvider,
-          (_, state) => state.showAlertDialogOnError(context),
+      (_, state) => state.showAlertDialogOnError(context),
     );
 
     return Scaffold(
@@ -230,15 +332,60 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                   child: switch (_step) {
                     StepStage.choose => _pageChoose(),
                     StepStage.uploadDocs =>
-                      _manualEntry ? _confirmDocumentsPage() : _uploadDocsIntro(),
-                    StepStage.uploadSupporting => _isSuccessService ? buildServiceRequestSuccess(serviceName: 'Test',agentName: 'Test',costUsd: 100,onTrackPressed: (){}) : _uploadSupportingDocuments(),
-                    StepStage.review => _pageReview(),
+                      _manualEntry
+                          ? _confirmDocumentsPage()
+                          : _uploadDocsIntro(),
+                    StepStage.uploadSupporting => _uploadSupportingDocuments(),
+                    StepStage.review =>
+                      _isSuccessService
+                          ? buildServiceRequestSuccess(
+                              serviceName: _service?.title ?? '',
+                              agentName: _agent?.name ?? '',
+                              costUsd: int.parse(_service?.cost ?? '0'),
+                              onTrackPressed: () {
+                                ref
+                                    .read(dashboardControllerProvider.notifier)
+                                    .setPosition(2);
+                                DashboardScreen.pageController.animateToPage(
+                                  2,
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut,
+                                );
+                                Navigator.of(context).maybePop();
+                              },
+                            )
+                          : _pageReview(),
                   },
                 ),
               ),
+              Visibility(
+                visible: _step == StepStage.choose,
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _agreeTerm,
+                      onChanged: (v) => setState(() {
+                        ref
+                            .read(serviceRequestFormNotifierProvider.notifier)
+                            .setAgreeTerm(v ?? false);
+                        _agreeTerm = v ?? false;
+                      }),
+                    ),
+                    const SizedBox(width: 2),
+                    const Expanded(
+                      child: Text(
+                        maxLines: null,
+                        'I agree to terms and confirm the information provided',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              12.vGap,
               _isSuccessService ? SizedBox.shrink() : _bottomBar(),
             ],
           ),
+
           ///loading view
           if (state.isLoading)
             Container(
@@ -307,124 +454,163 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
   Widget _pageChoose() {
     final tt = Theme.of(context).textTheme;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      children: [
-        Text(
-          'Agent & Dropdown',
-          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        _SelectBox(
-          onTap: () async {
-            final v = await _pickOne<AgentDataVO>(
-              title: 'Select Agent',
-              items: agents,
-              itemBuilder: (a) => Row(
+    ///agent details data provider
+    final agentDetailsDataProvider = ref.watch(
+      fetchAgentDetailsByIdProvider(id: widget.agentID.toString() ?? ''),
+    );
+
+    return agentDetailsDataProvider.when(
+      data: (agentsDetailsResponse) {
+        final agents = <AgentDetail>[
+          if (agentsDetailsResponse.data != null)
+            agentsDetailsResponse.data ?? AgentDetail(),
+        ];
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          children: [
+            Text(
+              'Agent & Dropdown',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            _SelectBox(
+              onTap: () async {
+                final v = await _pickOne<AgentDetail>(
+                  title: 'Select Agent',
+                  items: agents,
+                  itemBuilder: (a) => Row(
+                    children: [
+                      const CircleAvatar(radius: 18, child: Icon(Icons.person)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          a.name ?? '',
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const Icon(Icons.star, size: 18, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text(a.rating.toString() ?? ''),
+                    ],
+                  ),
+                );
+
+                ///set agent name to provider
+                if (v != null) setState(() => _agent = v);
+                ref
+                    .read(serviceRequestFormNotifierProvider.notifier)
+                    .setAgent(v?.name ?? '');
+              },
+              child: Row(
                 children: [
                   const CircleAvatar(radius: 18, child: Icon(Icons.person)),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      a.name ?? '',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Icon(Icons.star, size: 18, color: Colors.amber),
-                  const SizedBox(width: 4),
-                  Text(a.rating ?? ''),
-                ],
-              ),
-            );
-
-            ///set agent name to provider
-            if (v != null) setState(() => _agent = v);
-            ref.read(serviceRequestFormNotifierProvider.notifier).setAgent(v?.name ?? '');
-          },
-          child: Row(
-            children: [
-              const CircleAvatar(radius: 18, child: Icon(Icons.person)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _agent?.name ?? 'Agent Name',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.star, size: 16, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text((_agent?.rating ?? '')),
+                        Text(
+                          _agent?.name ?? 'Agent Name',
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              size: 16,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 4),
+                            Text((_agent?.rating.toString() ?? '')),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.keyboard_arrow_down_rounded),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          'Select Service',
-          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        _SelectBox(
-          onTap: () async {
-            final v = await _pickOne<Service>(
-              title: 'Select Service',
-              items: services,
-              itemBuilder: (s) => Row(
-                children: [
-                  const Icon(Icons.assignment_turned_in_outlined),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      s.name,
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
-                  Text('\$ ${s.costUsd} USD'),
+                  const Icon(Icons.keyboard_arrow_down_rounded),
                 ],
               ),
-            );
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Select Service',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            _SelectBox(
+              onTap: () async {
+                final v = await _pickOne<ServiceVO>(
+                  title: 'Select Service',
+                  items: agentsDetailsResponse.data?.services ?? [],
+                  itemBuilder: (s) => Row(
+                    children: [
+                      const Icon(Icons.assignment_turned_in_outlined),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          s.title ?? '',
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text('\$ ${s.cost} USD'),
+                    ],
+                  ),
+                );
 
-            ///set service id to provider
-            if (v != null) setState(() => _service = v);
-            ref.read(serviceRequestFormNotifierProvider.notifier)
-                .setService(id: 1);
-          },
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _service?.name ?? 'Visa Extension',
-                  style: tt.titleMedium,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ///set service id to provider
+                if (v != null) setState(() => _service = v);
+                if(v != null){
+                  ref
+                      .read(serviceRequestFormNotifierProvider.notifier)
+                      .setService(id: v.id ?? 0);
+                }
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _service?.title ?? 'Visa Extension',
+                      style: tt.titleMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.keyboard_arrow_down_rounded),
+                ],
               ),
-              const Icon(Icons.keyboard_arrow_down_rounded),
-            ],
+            ),
+            const SizedBox(height: 18),
+            _kv('Service Detail', _service?.detail),
+            const SizedBox(height: 12),
+            _kv('Service Duration', _service?.duration),
+            const SizedBox(height: 12),
+            _kv('Cost', _service == null ? null : '\$ ${_service!.cost} USD'),
+          ],
+        );
+      },
+      error: (error, stackTrace) => ErrorRetryView(
+        title: 'Error loading agents',
+        message: error.toString(),
+        onRetry: () => ref.invalidate(fetchAgentDetailsByIdProvider),
+      ),
+      loading: () => Center(
+        child: SizedBox(
+          width: 30,
+          height: 30,
+          child: LoadingIndicator(
+            indicatorType: Indicator.ballBeat,
+            strokeWidth: 2,
+            backgroundColor: Colors.transparent,
+            pathBackgroundColor: Colors.black,
           ),
         ),
-        const SizedBox(height: 18),
-        _kv('Service Detail', _service?.detail),
-        const SizedBox(height: 12),
-        _kv('Service Duration', _service?.duration),
-        const SizedBox(height: 12),
-        _kv('Cost', _service == null ? null : '\$ ${_service!.costUsd} USD'),
-      ],
+      ),
     );
   }
 
@@ -436,9 +622,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
       children: [
         Text(
           ' Upload Passport/ Visa/ CI/ Pink Card',
-          style: tt.bodyMedium?.copyWith(
-            fontSize: kTextRegular18,
-          ),
+          style: tt.bodyMedium?.copyWith(fontSize: kTextRegular18),
         ),
         const SizedBox(height: 16),
 
@@ -465,21 +649,27 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
         /// Scan flow (kept as-is)
         UploadActionTile(
           icon: Icons.document_scanner_outlined,
-          label: 'Scan Document',
+          label: 'Scan Other Documents',
           onTap: () {
             Navigator.push(
               context,
-                MaterialPageRoute(
-                  builder: (_) => CameraIdOcrPage(
-                    onParsed: (fields) {
-                      PassportMrz mrz = PassportMrz(documentNumber: fields.idNumber,primaryIdentifier: fields.name,
-                          secondaryIdentifier: fields.name,expiryDate: DateTime.parse(fields.dateOfExpiry ?? ''),
-                          nationality: fields.nationality,sex: fields.gender,birthDate: DateTime.parse(fields.dateOfBirth ?? ''));
-                      _seedFromMrz(mrz);
-                      setState(() => _manualEntry = true);
-                    },
-                  ),
-                )
+              MaterialPageRoute(
+                builder: (_) => CameraIdOcrPage(
+                  onParsed: (fields) {
+                    PassportMrz mrz = PassportMrz(
+                      documentNumber: fields.idNumber,
+                      primaryIdentifier: fields.name,
+                      secondaryIdentifier: fields.name,
+                      expiryDate: DateTime.parse(fields.dateOfExpiry ?? ''),
+                      nationality: fields.nationality,
+                      sex: fields.gender,
+                      birthDate: DateTime.parse(fields.dateOfBirth ?? ''),
+                    );
+                    _seedFromMrz(mrz);
+                    setState(() => _manualEntry = true);
+                  },
+                ),
+              ),
             );
           },
         ),
@@ -504,28 +694,36 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       children: [
-        Text('Required Documents', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        Text(
+          'Required Documents',
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 8),
 
-        ...docs.map((d) => _DocRow(
-          item: d,
-          onUpload: () async {
-            final pickedFile = await _pickAnyFile();
-            if (pickedFile == null) return;
+        ...docs.map(
+          (d) => _DocRow(
+            item: d,
+            onUpload: () async {
+              final pickedFile = await _pickAnyFile();
+              if (pickedFile == null) return;
 
-            ref.read(serviceRequestFormNotifierProvider.notifier)
-                .upsertDocument(type: d.title, file: pickedFile);
+              ref
+                  .read(serviceRequestFormNotifierProvider.notifier)
+                  .upsertDocument(type: d.title, file: pickedFile);
 
-            setState(() {
-              d.fileName = p.basename(pickedFile.path);
-              d.isUploaded = true;
-            });
-          },
-        )),
+              setState(() {
+                d.fileName = p.basename(pickedFile.path);
+                d.isUploaded = true;
+              });
+            },
+          ),
+        ),
 
         const SizedBox(height: 8),
-        Text('$uploaded/${docs.length} uploaded',
-            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          '$uploaded/${docs.length} uploaded',
+          style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }
@@ -553,7 +751,10 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                   Row(
                     children: List.generate(5, (i) {
                       final on =
-                          i < (double.parse(_agent?.rating ?? '4').round());
+                          i <
+                          (double.parse(
+                            _agent?.rating.toString() ?? '4',
+                          ).round());
                       return Icon(
                         on ? Icons.star : Icons.star_border,
                         size: 18,
@@ -572,11 +773,11 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 6),
-        Text(_service?.name ?? '-', style: tt.bodyLarge),
+        Text(_service?.title ?? '-', style: tt.bodyLarge),
         const SizedBox(height: 6),
         Text('Duration: ${_service?.duration ?? '-'}'),
         const SizedBox(height: 4),
-        Text('Cost: \$ ${_service?.costUsd ?? '-'} USD'),
+        Text('Cost: \$ ${_service?.cost ?? '-'} USD'),
         const Divider(height: 24),
         Text(
           'Uploaded Documents',
@@ -614,7 +815,8 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
         TextField(
           controller: notes,
           maxLines: 4,
-          onChanged: (v) => ref.read(serviceRequestFormNotifierProvider.notifier).setNote(v),
+          onChanged: (v) =>
+              ref.read(serviceRequestFormNotifierProvider.notifier).setNote(v),
           decoration: InputDecoration(
             hintText: 'Enter any special instructions here',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -626,8 +828,11 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
             Checkbox(
               value: _agree,
               onChanged: (v) => setState(() {
-                ref.read(serviceRequestFormNotifierProvider.notifier).setAgree(v ?? false);
-                _agree = v ?? false;}),
+                ref
+                    .read(serviceRequestFormNotifierProvider.notifier)
+                    .setAgree(v ?? false);
+                _agree = v ?? false;
+              }),
             ),
             const SizedBox(width: 6),
             const Expanded(
@@ -651,16 +856,26 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+            'Confirm Details',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
             'Please review and confirm details',
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             'Personal Details',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 12),
-
 
           PersonalDetailInputField(
             label: 'Passport Number',
@@ -670,7 +885,6 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
           ),
           const SizedBox(height: 10),
 
-
           PersonalDetailInputField(
             label: 'First Name',
             controller: _firstNameCtrl,
@@ -678,14 +892,12 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
           ),
           const SizedBox(height: 10),
 
-
           PersonalDetailInputField(
             label: 'Last Name',
             controller: _lastNameCtrl,
             onChanged: (_) => _sync(),
           ),
           const SizedBox(height: 10),
-
 
           PersonalDetailInputField(
             label: 'Date of Birth',
@@ -700,22 +912,24 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
           ),
           const SizedBox(height: 10),
 
-
           PersonalDetailInputField(
             label: 'Nationality',
             controller: _nationalityCtrl,
-            onChanged: (_) => _sync(),
+            onChanged: (_) {
+              // if (_nationalityError != null) setState(() => _nationalityError = null);
+              _sync();
+            },
           ),
-          const SizedBox(height: 10),
 
+          const SizedBox(height: 10),
 
           PersonalDetailInputField(
             label: 'Gender',
             controller: _genderCtrl,
+            hint: 'Male / Female / Other',
             onChanged: (_) => _sync(),
           ),
           const SizedBox(height: 10),
-
 
           PersonalDetailInputField(
             label: 'Expiry date',
@@ -735,17 +949,18 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     );
   }
 
-
   void _updateFormFromControllers() {
-    ref.read(serviceRequestFormNotifierProvider.notifier).setPersonal(
-      number     : _passportCtrl.text.nullIfEmpty,
-      firstName  : _firstNameCtrl.text.nullIfEmpty,
-      lastName   : _lastNameCtrl.text.nullIfEmpty,
-      dob        : _parseDmyNullable(_dobCtrl.text),
-      nationality: _nationalityCtrl.text.nullIfEmpty,
-      gender     : _genderCtrl.text.nullIfEmpty,
-      expiryDate : _parseDmyNullable(_expiryCtrl.text),
-    );
+    ref
+        .read(serviceRequestFormNotifierProvider.notifier)
+        .setPersonal(
+          number: _passportCtrl.text.nullIfEmpty,
+          firstName: _firstNameCtrl.text.nullIfEmpty,
+          lastName: _lastNameCtrl.text.nullIfEmpty,
+          dob: _parseDmyNullable(_dobCtrl.text),
+          nationality: _nationalityCtrl.text.nullIfEmpty,
+          gender: _genderCtrl.text.nullIfEmpty,
+          expiryDate: _parseDmyNullable(_expiryCtrl.text),
+        );
   }
 
   /// ---------- bottom bar (UPDATED) ----------
@@ -782,12 +997,11 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     );
   }
 
-
   ///success service request widget
   Widget buildServiceRequestSuccess({
     required String serviceName,
     required String agentName,
-    required num costUsd,
+    required int costUsd,
     required VoidCallback onTrackPressed,
   }) {
     return Builder(
@@ -805,7 +1019,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
                       'Your service request has been successfully submitted. '
-                          'You can track the status of your request.',
+                      'You can track the status of your request.',
                       textAlign: TextAlign.center,
                       style: tt.bodyMedium?.copyWith(color: Colors.grey[700]),
                     ),
@@ -814,7 +1028,11 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                   CircleAvatar(
                     radius: 36,
                     backgroundColor: const Color(0xFF50B463),
-                    child: const Icon(Icons.check, color: Colors.white, size: 38),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 38,
+                    ),
                   ),
                   const SizedBox(height: 24),
 
@@ -822,7 +1040,9 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Selected Service',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -913,12 +1133,17 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     );
   }
 
-  Widget kv(BuildContext context,
-      {required String k, required String v, bool alignEnd = false}) {
+  Widget kv(
+    BuildContext context, {
+    required String k,
+    required String v,
+    bool alignEnd = false,
+  }) {
     final tt = Theme.of(context).textTheme;
     return Column(
-      crossAxisAlignment:
-      alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(
           k,
@@ -949,9 +1174,13 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     );
   }
 
- ///pick file
+  ///pick file
   Future<File?> _pickAnyFile() async {
-    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'png', 'pdf'],
+    );
     if (result == null || result.files.single.path == null) return null;
     return File(result.files.single.path!);
   }
@@ -960,7 +1189,16 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     required String title,
     required List<T> items,
     required Widget Function(T) itemBuilder,
-  }) {
+  }) async {
+    if (items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            duration: Duration(milliseconds: 1000),
+            content: Text('No items available')),
+      );
+      return null;
+    }
+
     final tt = Theme.of(context).textTheme;
     return showModalBottomSheet<T>(
       context: context,
@@ -981,7 +1219,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
               ),
               const SizedBox(height: 12),
               ...items.map(
-                (e) => ListTile(
+                    (e) => ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                   title: itemBuilder(e),
                   onTap: () => Navigator.of(ctx).pop<T>(e),
@@ -995,10 +1233,13 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     );
   }
 
-  void _submit() async{
-   final state = ref.watch(serviceRequestControllerProvider);
+
+  void _submit() async {
+    final state = ref.watch(serviceRequestControllerProvider);
     if (!state.isLoading) {
-      final isSuccess = await ref.read(serviceRequestControllerProvider.notifier).submit();
+      final isSuccess = await ref
+          .read(serviceRequestControllerProvider.notifier)
+          .submit();
 
       ///is success login
       if (isSuccess) {
@@ -1061,6 +1302,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
     return map[iso3.toUpperCase()] ?? iso3;
   }
 }
+
 
 /// ───────── small widgets / models ─────────
 
@@ -1222,18 +1464,30 @@ DateTime? _parseDmyNullable(String s) {
   if (day == null || year == null) return null;
 
   const monthMap = {
-    'JAN': 1, 'JANUARY': 1,
-    'FEB': 2, 'FEBRUARY': 2,
-    'MAR': 3, 'MARCH': 3,
-    'APR': 4, 'APRIL': 4,
+    'JAN': 1,
+    'JANUARY': 1,
+    'FEB': 2,
+    'FEBRUARY': 2,
+    'MAR': 3,
+    'MARCH': 3,
+    'APR': 4,
+    'APRIL': 4,
     'MAY': 5,
-    'JUN': 6, 'JUNE': 6,
-    'JUL': 7, 'JULY': 7,
-    'AUG': 8, 'AUGUST': 8,
-    'SEP': 9, 'SEPT': 9, 'SEPTEMBER': 9,
-    'OCT': 10, 'OCTOBER': 10,
-    'NOV': 11, 'NOVEMBER': 11,
-    'DEC': 12, 'DECEMBER': 12,
+    'JUN': 6,
+    'JUNE': 6,
+    'JUL': 7,
+    'JULY': 7,
+    'AUG': 8,
+    'AUGUST': 8,
+    'SEP': 9,
+    'SEPT': 9,
+    'SEPTEMBER': 9,
+    'OCT': 10,
+    'OCTOBER': 10,
+    'NOV': 11,
+    'NOVEMBER': 11,
+    'DEC': 12,
+    'DECEMBER': 12,
   };
 
   final month = monthMap[mon.toUpperCase()];
@@ -1245,4 +1499,3 @@ DateTime? _parseDmyNullable(String s) {
     return null;
   }
 }
-

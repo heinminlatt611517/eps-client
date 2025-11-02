@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PersonalDetailInputField extends StatelessWidget {
   const PersonalDetailInputField({
     super.key,
     required this.label,
-    required this.controller,          // <-- use controller instead of value
+    required this.controller,
     this.hint,
     this.onChanged,
     this.keyboardType,
@@ -12,7 +13,14 @@ class PersonalDetailInputField extends StatelessWidget {
     this.maxLines = 1,
     this.validator,
     this.suffix,
-    this.onTap
+    this.onTap,
+    this.focusNode,
+    this.errorText,
+    this.obscureText = false,
+    this.textInputAction,
+    this.inputFormatters,
+    this.enabled = true,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final String label;
@@ -27,10 +35,21 @@ class PersonalDetailInputField extends StatelessWidget {
   final Widget? suffix;
   final VoidCallback? onTap;
 
+  // NEW
+  final FocusNode? focusNode;
+  final String? errorText;
+  final bool obscureText;
+  final TextInputAction? textInputAction;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool enabled;
+  final TextCapitalization textCapitalization;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final hasError = (errorText != null && errorText!.isNotEmpty);
 
     return Container(
       width: double.infinity,
@@ -38,23 +57,30 @@ class PersonalDetailInputField extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceVariant.withOpacity(.35),
         borderRadius: BorderRadius.circular(12),
+        border: hasError
+            ? Border.all(color: cs.error.withOpacity(.6))
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: tt.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label,
+              style: tt.labelLarge?.copyWith(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              )),
           const SizedBox(height: 6),
           TextFormField(
             controller: controller,
+            focusNode: focusNode,
+            enabled: enabled,
             readOnly: readOnly,
             keyboardType: keyboardType,
-            maxLines: maxLines,
+            textInputAction: textInputAction,
+            textCapitalization: textCapitalization,
+            maxLines: obscureText ? 1 : maxLines,
+            obscureText: obscureText,
+            inputFormatters: inputFormatters,
             onChanged: onChanged,
             onTap: onTap,
             validator: validator,
@@ -72,6 +98,9 @@ class PersonalDetailInputField extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               border: InputBorder.none,
               suffixIcon: suffix,
+              // show error line if provided
+              errorText: errorText,
+              errorMaxLines: 2,
             ),
           ),
         ],

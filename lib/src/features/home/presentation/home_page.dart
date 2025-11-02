@@ -1,5 +1,6 @@
 import 'package:eps_client/src/features/job_opportunities/presentation/job_opportunities_page.dart';
 import 'package:eps_client/src/features/upload_documents/presentation/upload_documents_page.dart';
+import 'package:eps_client/src/utils/images.dart';
 import 'package:eps_client/src/utils/strings.dart';
 import 'package:flutter/material.dart';
 
@@ -85,7 +86,7 @@ class HomePage extends StatelessWidget {
                 childAspectRatio: 1.6,
                 children:  [
                   ServiceCard(
-                    icon: Icons.important_devices,
+                    imageName: kVisaPassportImage,
                     title: kLabelVisaPassportServices,
                     enabled: true,
                     onTap: (){
@@ -96,7 +97,7 @@ class HomePage extends StatelessWidget {
                     },
                   ),
                   ServiceCard(
-                    icon: Icons.work_outline,
+                    imageName: kJobImage,
                     title: kLabelJobOpportunities,
                     enabled: true,
                     onTap: (){
@@ -107,12 +108,12 @@ class HomePage extends StatelessWidget {
                     },
                   ),
                   ServiceCard(
-                    icon: Icons.badge_outlined,
+                    imageName: kLicensesImage,
                     title: kLabelDrivingLicenseServices,
                     enabled: true,
                   ),
                   ServiceCard(
-                    icon: Icons.car_repair_outlined,
+                    imageName: kCarWorkshopImage,
                     title: kLabelCarAndWorkshops,
                     enabled: false, // greyed like mock
                   ),
@@ -127,8 +128,7 @@ class HomePage extends StatelessWidget {
               PromoBanner(
                 leadingIcon: Icons.campaign_outlined,
                 title: kLabelFreeCarWorkShop,
-                trailing: Icon(Icons.ev_station_outlined,
-                    size: 56, color: Theme.of(context).colorScheme.primary),
+                trailing: Image.asset(kFreeCardWorkshopImage,height: 50,width: 60,fit: BoxFit.contain,),
                 onTap: () {},
               ),
               const SizedBox(height: 20),
@@ -153,7 +153,7 @@ class HomePage extends StatelessWidget {
                               style: text.bodySmall?.copyWith(color: cs.outline),
                             ),
                           ],),
-                          Icon(Icons.map,size: 100,)
+                          Image.asset(kMapImage,height: 100,width: 110,fit: BoxFit.contain,),
                         ],
                       ),
                     ),

@@ -1,14 +1,18 @@
 import 'package:eps_client/src/utils/strings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_storage/get_storage.dart';
 
+import '../../../utils/secure_storage.dart';
 import '../../../widgets/circle_icon_view.dart';
 import '../../../widgets/setting_tile_view.dart';
+import '../../dashboard/controller/dashboard_controller.dart';
 
-class MoreSettingsPage extends StatelessWidget {
+class MoreSettingsPage extends ConsumerWidget {
   const MoreSettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -76,6 +80,13 @@ class MoreSettingsPage extends StatelessWidget {
             onTap: () async {
               final ok = await _confirmLogout(context);
               if (ok == true) {
+                await GetStorage()
+                    .remove(SecureDataList.isAlreadyLogin.name);
+                ref
+                    .read(secureStorageProvider)
+                    .saveAuthStatus(kAuthNotLoggedIn);
+                ref.invalidate(secureStorageProvider);
+                ref.invalidate(dashboardControllerProvider);
               }
             },
           ),
