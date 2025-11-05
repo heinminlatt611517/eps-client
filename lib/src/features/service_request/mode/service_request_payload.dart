@@ -16,6 +16,7 @@ class ServiceRequestPayload {
   final DateTime expiryDate;
   final String? note;
   final List<ServiceDoc> documents;
+  final String? documentType;
 
   const ServiceRequestPayload({
     required this.serviceId,
@@ -27,5 +28,6 @@ class ServiceRequestPayload {
     required this.expiryDate,
     this.note,
     required this.documents,
+    required this.documentType
   });
 }

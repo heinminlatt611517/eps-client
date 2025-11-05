@@ -57,6 +57,7 @@ class ServiceRequestFormNotifier extends _$ServiceRequestFormNotifier {
 
   /// step 4
   void setNote(String? v) => state = state.copyWith(note: v);
+  void setDocumentType(String? v) => state = state.copyWith(documentType: v);
   void setAgree(bool v)   => state = state.copyWith(agree: v);
   void setAgreeTerm(bool v)   => state = state.copyWith(agreeTerm: v);
 

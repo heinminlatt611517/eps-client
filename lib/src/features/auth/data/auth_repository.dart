@@ -25,8 +25,8 @@ class AuthRepository {
     try {
       final baseOptions = BaseOptions(
         baseUrl: kBaseUrl,
-        connectTimeout: const Duration(milliseconds: 5000),
-        receiveTimeout: const Duration(milliseconds: 5000),
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 20),
         responseType: ResponseType.json,
         headers: {"Content-Type": "application/json"},
       );
@@ -39,9 +39,30 @@ class AuthRepository {
       );
       final tokenBox = GetStorage();
 
-      tokenBox.write(
-        SecureDataList.token.name,
-        response.data['token'],
+      tokenBox.write(SecureDataList.token.name, response.data['token']);
+    } on DioException catch (e) {
+      throw e.response?.data["message"] ??
+          ErrorHandler.handle(e).failure.message;
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  Future<void> signUp(dynamic payload) async {
+    try {
+      final baseOptions = BaseOptions(
+        baseUrl: kBaseUrl,
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 20),
+        responseType: ResponseType.json,
+        headers: {"Content-Type": "application/json"},
+      );
+
+      final dio = Dio(baseOptions);
+      final response = await dio.post(
+        kEndPointRegister,
+        options: Options(headers: {"Content-Type": "application/json"}),
+        data: payload,
       );
     } on DioException catch (e) {
       throw e.response?.data["message"] ??
@@ -50,6 +71,8 @@ class AuthRepository {
       throw e.toString();
     }
   }
+
+  Future<void> signInWithGoogle() async {}
 }
 
 @riverpod

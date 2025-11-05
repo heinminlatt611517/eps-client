@@ -6,9 +6,14 @@ import 'package:intl/intl.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 import '../../../widgets/error_tetry_view.dart';
+import '../model/service_status_details_response.dart';
 
 class ServiceStatusDetailsPage extends ConsumerWidget {
-  const ServiceStatusDetailsPage({super.key, required this.id});
+  const ServiceStatusDetailsPage({
+    super.key,
+    required this.id,
+  });
+
   final int? id;
 
   @override
@@ -17,169 +22,181 @@ class ServiceStatusDetailsPage extends ConsumerWidget {
     final tt = Theme.of(context).textTheme;
 
     final detailsState =
-    ref.watch(fetchServiceStatusDetailsByIdProvider(id: id.toString()));
+    ref.watch(fetchServiceStatusDetailsByIdProvider(id: id?.toString() ?? ''));
 
     return Scaffold(
       appBar: const CustomAppBarView(title: 'Service Status Detail'),
       body: SafeArea(
-        child: detailsState.when(
-          data: (resp) {
-            final d = resp.data;
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return detailsState.when(
+              /// -------- DATA --------
+              data: (details) {
+                final d = details.data;
 
-            /// Top card info
-            final serviceName = d?.serviceName ?? 'Service Name';
-            final agentName = d?.agentName ?? 'Agent Name';
-            final costLabel =
-            d?.serviceCost == null ? '\$ —' : '\$ ${d!.serviceCost}';
+                final serviceName = d?.serviceName ?? '-';
+                final agentName   = d?.agentName   ?? '-';
+                final serviceCost = (d?.serviceCost ?? '0').toString();
+                final statusInt   = d?.status ?? 0;
+                final stage       = _mapStage(statusInt);
 
-            /// Stage from status (1..4)
-            final stage = _stageFromStatus(d?.status);
+                /// Histories → List<StatusUpdate>
+                final List<dynamic> raw = (d?.histories ?? const []);
+                final histories = raw.map<StatusUpdate>((h) {
+                  if (h is HistoryVO) {
+                    final note = (h.note ?? '').trim();
+                    final createdAt = h.createdAt;
+                    return StatusUpdate(
+                      title: note.isNotEmpty ? note : 'Updated',
+                      time: createdAt is DateTime ? createdAt : _tryParseDate(createdAt),
+                    );
+                  } else if (h is Map<String, dynamic>) {
+                    final note = (h['note'] as String?)?.trim() ?? '';
+                    final createdAt = _tryParseDate(h['created_at']);
+                    return StatusUpdate(title: note.isNotEmpty ? note : 'Updated', time: createdAt);
+                  } else {
+                    return const StatusUpdate(title: 'Updated');
+                  }
+                }).toList();
 
-            /// Map histories -> UI updates (newest first)
-            final List<_UpdateVM> updates = (d?.histories ?? const [])
-                .map<_UpdateVM>((h) => _UpdateVM(
-              title: (h.note ?? '').trim().isEmpty
-                  ? 'Updated'
-                  : (h.note ?? ''),
-              time: _tryParseDate(h.createdAt),
-            ))
-                .toList()
-              ..sort((a, b) => (b.time ?? DateTime(0))
-                  .compareTo(a.time ?? DateTime(0))); // newest first
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Service Status', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 10),
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Service Status',
-                      style:
-                      tt.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 10),
+                      _ServiceCard(title: serviceName, subtitle: agentName, priceLabel: '฿ $serviceCost'),
+                      const SizedBox(height: 16),
 
-                  _ServiceCard(
-                    title: serviceName,
-                    subtitle: agentName,
-                    priceLabel: costLabel,
+                      _StageProgress(current: stage),
+                      const SizedBox(height: 8),
+                      Center(child: Text(stage.label, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+                      const SizedBox(height: 24),
+
+                      Text('Updates', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 12),
+
+                      if (histories.isEmpty)
+                        Text('No updates yet', style: tt.bodyMedium?.copyWith(color: cs.outline))
+                      else
+                        ...histories.map((u) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _UpdateTile(update: u),
+                        )),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                );
+              },
 
-                  _StageProgress(current: stage),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Text(
-                      stage.label,
-                      style:
-                      tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              /// -------- ERROR (centered) --------
+              error: (error, _) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(
+                    child: ErrorRetryView(
+                      title: 'Error loading customer service details',
+                      message: error.toString(),
+                      onRetry: () => ref.invalidate(
+                        fetchServiceStatusDetailsByIdProvider(id: id?.toString() ?? ''),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Divider(color: cs.outlineVariant),
+                ),
+              ),
 
-                  const SizedBox(height: 16),
-                  Text('Updates',
-                      style: tt.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 12),
-
-                  if (updates.isEmpty)
-                    Text('No updates yet',
-                        style: tt.bodyMedium?.copyWith(color: cs.outline))
-                  else
-                    ...updates.expand((u) => [
-                      _UpdateTile(title: u.title, time: u.time),
-                      const SizedBox(height: 16),
-                      Divider(color: cs.outlineVariant),
-                      const SizedBox(height: 4),
-                    ]),
-                ],
+              /// -------- LOADING (centered) --------
+              loading: () => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child:  Center(
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: LoadingIndicator(
+                        indicatorType: Indicator.ballBeat,
+                        colors: [Theme.of(context).colorScheme.primary],
+                        backgroundColor: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             );
           },
-          error: (e, __) => ErrorRetryView(
-            title: 'Error loading customer service details',
-            message: e.toString(),
-            onRetry: () =>
-                ref.invalidate(fetchServiceStatusDetailsByIdProvider),
-          ),
-          loading: () => SizedBox(
-            height: 200,
-            child: Center(
-              child: SizedBox(
-                width: 36,
-                height: 36,
-                child: LoadingIndicator(
-                  indicatorType: Indicator.ballBeat,
-                  colors: [Theme.of(context).colorScheme.primary],
-                  backgroundColor: Colors.transparent,
-                ),
-              ),
-            ),
-          ),
         ),
-      ),
+      )
+
     );
   }
 }
 
-/// ─────────── Stage mapping & label ───────────
-enum StatusStage { received, processing, readyForPickup, completed }
+
+/// ───────────────────── Models & helpers ─────────────────────
+
+DateTime? _tryParseDate(Object? v) {
+  if (v is DateTime) return v;
+  if (v is String && v.isNotEmpty) {
+    try { return DateTime.parse(v); } catch (_) {}
+  }
+  return null;
+}
+
+
+enum StatusStage {pending, received, processing, readyForPickup }
 
 extension on StatusStage {
   String get label => switch (this) {
     StatusStage.received => 'Received',
     StatusStage.processing => 'In Progress',
     StatusStage.readyForPickup => 'Ready for Pickup',
-    StatusStage.completed => 'Completed',
+    StatusStage.pending => 'Pending',
   };
 }
 
-StatusStage _stageFromStatus(int? status) {
-  switch (status) {
+/// Update item
+class StatusUpdate {
+  final String? title;
+  final DateTime? time;
+  const StatusUpdate({this.title, this.time});
+
+  String timeAgo() {
+    final t = time ?? DateTime.now();
+    final now = DateTime.now();
+    final diff = now.difference(t);
+
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final dayOnly = DateTime(t.year, t.month, t.day);
+    if (dayOnly == yesterday) return 'Yesterday';
+    return DateFormat.MMMMd().format(t);
+  }
+}
+
+StatusStage _mapStage(int s) {
+  switch (s) {
+    case 0:
+      return StatusStage.pending;
     case 1:
       return StatusStage.received;
     case 2:
       return StatusStage.processing;
     case 3:
-      return StatusStage.readyForPickup;
-    case 4:
-      return StatusStage.completed;
     default:
-      return StatusStage.processing; // sensible fallback
+      return StatusStage.readyForPickup;
   }
 }
 
-/// ─────────── Small VMs / helpers ───────────
-class _UpdateVM {
-  final String title;
-  final DateTime? time;
-  _UpdateVM({required this.title, this.time});
-}
 
-DateTime? _tryParseDate(Object? v) {
-  if (v is DateTime) return v;
-  if (v is String && v.isNotEmpty) {
-    try {
-      return DateTime.parse(v);
-    } catch (_) {}
-  }
-  return null;
-}
+/// ───────────────────── UI pieces ─────────────────────
 
-String _timeAgo(DateTime? t) {
-  if (t == null) return '';
-  final now = DateTime.now();
-  final diff = now.difference(t);
-  if (diff.inMinutes < 1) return 'Just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
-  if (diff.inHours < 24) return '${diff.inHours} hours ago';
-  final isYesterday = DateTime(t.year, t.month, t.day) ==
-      DateTime(now.year, now.month, now.day - 1);
-  if (isYesterday) return 'Yesterday';
-  return DateFormat.MMMMd().format(t); // e.g., Apr 3
-}
-
-/// ─────────── UI pieces ───────────
+///service card view
 class _ServiceCard extends StatelessWidget {
   const _ServiceCard({
     required this.title,
@@ -236,6 +253,7 @@ class _ServiceCard extends StatelessWidget {
   }
 }
 
+///state progress view
 class _StageProgress extends StatelessWidget {
   const _StageProgress({required this.current});
   final StatusStage current;
@@ -244,45 +262,32 @@ class _StageProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final labels = const [
+      'Pending',
       'Received',
       'Processing',
-      'Ready for pickup',
-      'Completed',
+      'Ready for Pickup',
     ];
-    final idx = StatusStage.values.indexOf(current);
+
+    int idx = StatusStage.values.indexOf(current);
 
     Widget dot(bool active) => Container(
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: active ? cs.primary : Colors.transparent,
+        color: active ? cs.onPrimary : cs.surface,
         shape: BoxShape.circle,
         border: Border.all(
           color: active ? cs.primary : cs.outlineVariant,
-          width: active ? 0 : 2,
+          width: 6,
         ),
-      ),
-    );
-
-    Widget bar(bool active) => Expanded(
-      child: Container(
-        height: 2,
-        color: active ? cs.primary : cs.outlineVariant,
       ),
     );
 
     return Column(
       children: [
         Row(
-          children: [
-            dot(0 <= idx),
-            bar(1 <= idx),
-            dot(1 <= idx),
-            bar(2 <= idx),
-            dot(2 <= idx),
-            bar(3 <= idx),
-            dot(3 <= idx),
-          ],
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(4, (i) => dot(i <= idx)),
         ),
         const SizedBox(height: 8),
         Row(
@@ -307,10 +312,10 @@ class _StageProgress extends StatelessWidget {
   }
 }
 
+///update tile view
 class _UpdateTile extends StatelessWidget {
-  const _UpdateTile({required this.title, this.time});
-  final String title;
-  final DateTime? time;
+  const _UpdateTile({required this.update});
+  final StatusUpdate update;
 
   @override
   Widget build(BuildContext context) {
@@ -320,9 +325,12 @@ class _UpdateTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+        Text(
+          update.title ?? '—',
+          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 4),
-        Text(_timeAgo(time), style: tt.bodySmall?.copyWith(color: cs.outline)),
+        Text(update.timeAgo(), style: tt.bodySmall?.copyWith(color: cs.outline)),
       ],
     );
   }

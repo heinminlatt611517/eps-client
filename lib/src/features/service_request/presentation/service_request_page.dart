@@ -24,6 +24,8 @@ import '../../upload_documents/presentation/upload_documents_page.dart';
 import '../form/service_request_form_notifier.dart';
 import '../mode/country_data_vo.dart';
 
+enum DocumentType { passport, ci, visa, pinkCard }
+
 class ServiceRequestPage extends ConsumerStatefulWidget {
   final int? agentID;
 
@@ -103,6 +105,60 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
   ///validation for nationality
   final _nationalityFocus = FocusNode();
   String? _nationalityError;
+
+  ///document
+  String docTypeLabel(DocumentType t) {
+    switch (t) {
+      case DocumentType.passport: return 'Passport';
+      case DocumentType.ci:       return 'CI';
+      case DocumentType.visa:     return 'Visa';
+      case DocumentType.pinkCard: return 'Pink Card';
+    }
+  }
+
+  ///document type dialog
+  Future<DocumentType?> showDocumentTypePicker(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return showModalBottomSheet<DocumentType>(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        Widget tile(String label, IconData icon, DocumentType type) {
+          return ListTile(
+            leading: Icon(icon, color: cs.primary),
+            title: Text(label, style: tt.titleMedium),
+            onTap: () => Navigator.of(ctx).pop(type),
+          );
+        }
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 4),
+                Text('Choose document type',
+                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 12),
+                tile('Passport', Icons.file_copy, DocumentType.passport),
+                tile('CI',       Icons.credit_card, DocumentType.ci),
+                tile('Visa',     Icons.sticky_note_2_outlined, DocumentType.visa),
+                tile('Pink Card',Icons.badge_outlined, DocumentType.pinkCard),
+                const SizedBox(height: 6),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 
 
   void _wireNationalityValidation() {
@@ -626,51 +682,75 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
         ),
         const SizedBox(height: 16),
 
-        /// Scan flow (kept as-is)
-        UploadActionTile(
-          icon: Icons.document_scanner_outlined,
-          label: 'Scan Passport',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LiveMrzScannerPage(
-                  onFound: (mrz) {
-                    _seedFromMrz(mrz);
-                    setState(() => _manualEntry = true);
-                  },
-                ),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 14),
+        // /// Scan flow (kept as-is)
+        // UploadActionTile(
+        //   icon: Icons.document_scanner_outlined,
+        //   label: 'Scan Passport',
+        //   onTap: () {
+        //     Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //         builder: (_) => LiveMrzScannerPage(
+        //           onFound: (mrz) {
+        //             _seedFromMrz(mrz);
+        //             setState(() => _manualEntry = true);
+        //           },
+        //         ),
+        //       ),
+        //     );
+        //   },
+        // ),
+        // const SizedBox(height: 14),
 
         /// Scan flow (kept as-is)
         UploadActionTile(
           icon: Icons.document_scanner_outlined,
-          label: 'Scan Other Documents',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CameraIdOcrPage(
-                  onParsed: (fields) {
-                    PassportMrz mrz = PassportMrz(
-                      documentNumber: fields.idNumber,
-                      primaryIdentifier: fields.name,
-                      secondaryIdentifier: fields.name,
-                      expiryDate: DateTime.parse(fields.dateOfExpiry ?? ''),
-                      nationality: fields.nationality,
-                      sex: fields.gender,
-                      birthDate: DateTime.parse(fields.dateOfBirth ?? ''),
-                    );
-                    _seedFromMrz(mrz);
-                    setState(() => _manualEntry = true);
-                  },
+          label: 'Scan Document',
+          onTap: () async{
+            final picked = await showDocumentTypePicker(context);
+            if (picked == null) return;
+            if(picked == DocumentType.passport){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LiveMrzScannerPage(
+                    onFound: (mrz) {
+                      _seedFromMrz(mrz);
+                      setState(() {
+                        _manualEntry = true;
+                        ref.read(serviceRequestFormNotifierProvider.notifier).setDocumentType(picked.name.toLowerCase());
+                      });
+                    },
+                  ),
                 ),
-              ),
-            );
+              );
+            }
+            else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CameraIdOcrPage(
+                    onParsed: (fields) {
+                      PassportMrz mrz = PassportMrz(
+                        documentNumber: fields.idNumber,
+                        primaryIdentifier: fields.name,
+                        secondaryIdentifier: fields.name,
+                        expiryDate: DateTime.parse(fields.dateOfExpiry ?? ''),
+                        nationality: fields.nationality,
+                        sex: fields.gender,
+                        birthDate: DateTime.parse(fields.dateOfBirth ?? ''),
+                      );
+                      _seedFromMrz(mrz);
+                      setState(() {
+                        _manualEntry = true;
+                        ref.read(serviceRequestFormNotifierProvider.notifier).setDocumentType(picked.name.toLowerCase());
+                      });
+                    },
+                  ),
+                ),
+              );
+            }
+
           },
         ),
         const SizedBox(height: 14),

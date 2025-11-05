@@ -1,3 +1,4 @@
+import 'package:eps_client/src/features/auth/presentations/register_page.dart';
 import 'package:eps_client/src/utils/async_value_ui.dart';
 import 'package:eps_client/src/utils/extensions.dart';
 import 'package:eps_client/src/utils/gap.dart';
@@ -112,7 +113,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     textInputAction: TextInputAction.next,
                     onSubmitted: (_) => _passwordNode.requestFocus(),
                     decoration: _underlineInput(
-                      hint: 'Username',
+                      hint: 'Email',
                       icon: Icons.person,
                       accent: primary,
                     ),
@@ -166,15 +167,44 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   16.vGap,
 
-                  TextButton(
-                    onPressed: () {
-                      // TODO: push Forgot Password flow
-                    },
-                    child: Text(
-                      'Forgot your password?',
-                      style: tt.bodyMedium?.copyWith(color: Colors.black87),
+                  /// Sign up button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RegisterPage(),
+                          ),
+                        );
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.grey, // match mock
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        textStyle: const TextStyle(
+                          letterSpacing: .5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: const Text('SIGN UP'),
                     ),
                   ),
+
+                  16.vGap,
+
+                  // TextButton(
+                  //   onPressed: () {
+                  //     // TODO: push Forgot Password flow
+                  //   },
+                  //   child: Text(
+                  //     'Forgot your password?',
+                  //     style: tt.bodyMedium?.copyWith(color: Colors.black87),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

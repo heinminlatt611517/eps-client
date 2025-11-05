@@ -24,73 +24,87 @@ class AgentsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                kLabelAvailableAgents,
-                style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                kLabelSelectAndAgentToBegin,
-                style: tt.bodyMedium?.copyWith(color: cs.outline),
-              ),
-              const SizedBox(height: 16),
-
-              /// Grid of agent cards
-              availableAgentsState.when(
-                data: (agents) {
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: agents.data?.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 2 / 2.1,
-                        ),
-                    itemBuilder: (context, i) => AgentCard(
-                      agent: agents.data?[i] ?? AgentDataVO(),
-                      onView: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AgentDetailsPage(
-                              id: agents.data?[i].id.toString() ?? '',
-                              onServiceTap: (s) =>
-                                  debugPrint('Tap service: $s'),
-                              onViewCertification: () =>
-                                  debugPrint('View certification'),
-                            ),
-                          ),
-                        );
-                      },
-                      onRequest: agents.data?[i].canRequest ?? true
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ServiceRequestPage(agentID: agents.data?[i].id,),
-                                ),
-                              );
-                            }
-                          : null, // disabled state
-                    ),
-                  );
-                },
-                error: (error, stackTrace) => ErrorRetryView(
-                  title: 'Error loading agents',
-                  message: error.toString(),
-                  onRetry: () => ref.invalidate(fetchAvailableAgentsProvider),
+        child: CustomScrollView(
+          slivers: [
+            /// Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(kLabelAvailableAgents,
+                        style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 4),
+                    Text(kLabelSelectAndAgentToBegin,
+                        style: tt.bodyMedium?.copyWith(color: cs.outline)),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-                loading: () => SizedBox(
-                  height: 200,
+              ),
+            ),
+
+            /// Content
+            ...availableAgentsState.when(
+              data: (agents) => [
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 2 / 2.1,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                          (context, i) => AgentCard(
+                        agent: agents.data?[i] ?? AgentDataVO(),
+                        onView: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AgentDetailsPage(
+                                id: agents.data?[i].id.toString() ?? '',
+                                onServiceTap: (s) => debugPrint('Tap service: $s'),
+                                onViewCertification: () =>
+                                    debugPrint('View certification'),
+                              ),
+                            ),
+                          );
+                        },
+                        onRequest: agents.data?[i].canRequest ?? true
+                            ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ServiceRequestPage(
+                                agentID: agents.data?[i].id,
+                              ),
+                            ),
+                          );
+                        }
+                            : null,
+                      ),
+                      childCount: (agents.data?.length ?? 0),
+                    ),
+                  ),
+                ),
+              ],
+              error: (error, stackTrace) => [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: ErrorRetryView(
+                      title: 'Error loading agents',
+                      message: error.toString(),
+                      onRetry: () => ref.invalidate(fetchAvailableAgentsProvider),
+                    ),
+                  ),
+                ),
+              ],
+              loading: () => [
+                SliverFillRemaining(
+                  hasScrollBody: false,
                   child: Center(
                     child: SizedBox(
                       width: 36,
@@ -103,12 +117,12 @@ class AgentsPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
+
   }
 }

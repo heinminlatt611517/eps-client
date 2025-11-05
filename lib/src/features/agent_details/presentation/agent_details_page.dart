@@ -30,122 +30,131 @@ class AgentDetailsPage extends ConsumerWidget {
     return Scaffold(
       appBar: CustomAppBarView(title: 'Agent'),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: agentDetailsDataProvider.when(
-            data: (agent) {
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return agentDetailsDataProvider.when(
+              // ---------- DATA ----------
+              data: (agent) {
+                final cs = Theme.of(context).colorScheme;
+                final tt = Theme.of(context).textTheme;
 
-              final name = agent.data?.name ?? 'Agent';
-              final rating =  agent.data?.rating;
-              final location = agent.data?.location ?? 'Location';
-              // final languages = (agent.data?.languages ?? const <String>[]).join(', ');
-              //final languagesLabel = languages.isEmpty ? 'Speak language' : languages;
-              final experienceYears = 1;
-              final services = agent.data?.services?.map((e)=> e.title).toList();
+                final name = agent.data?.name ?? 'Agent';
+                final rating = double.tryParse('${agent.data?.rating ?? 0}') ?? 0;
+                final location = agent.data?.location ?? 'Location';
+                final experienceYears = 1;
+                final services = (agent.data?.services ?? [])
+                    .map((e) => e.title ?? '')
+                    .where((s) => s.isNotEmpty)
+                    .toList();
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// -------- header ----------
-                  Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 112,
-                          height: 112,
-                          decoration: BoxDecoration(
-                            color: cs.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: cs.outlineVariant, width: 3),
-                          ),
-                          child: const Icon(Icons.person, size: 64),
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// header
+                      Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 112,
+                              height: 112,
+                              decoration: BoxDecoration(
+                                color: cs.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: cs.outlineVariant, width: 3),
+                              ),
+                              child: const Icon(Icons.person, size: 64),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              name,
+                              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            _RatingRow(rating: rating),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        Text(name, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 4),
-                        _RatingRow(rating: double.parse(rating.toString())),
-                      ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      /// info
+                      _InfoRow(icon: Icons.place_outlined, text: location),
+                      const SizedBox(height: 8),
+                      _InfoRow(
+                        icon: Icons.badge_outlined,
+                        text: '$experienceYears years experience',
+                      ),
+                      const SizedBox(height: 12),
+
+                      /// services buttons
+                      if (services.isNotEmpty)
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
+                          children: services.map((s) {
+                            return FilledButton(
+                              onPressed: () => onServiceTap?.call(s),
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              child: Text(s),
+                            );
+                          }).toList(),
+                        ),
+
+                      const SizedBox(height: 12),
+                      const _SectionDivider(),
+
+                      if ((agent.data?.reviews?.isNotEmpty ?? false))
+                        Text('Reviews', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: agent.data?.reviews?.length ?? 0,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, i) =>
+                            _SkeletonCard(height: 100, comment: agent.data?.reviews?[i].comment ?? ''),
+                      ),
+                    ],
+                  ),
+                );
+              },
+
+              /// ---------- ERROR (centered) ----------
+              error: (error, stack) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(
+                    child: ErrorRetryView(
+                      title: 'Error loading agent detail',
+                      message: error.toString(),
+                      onRetry: () => ref.invalidate(fetchAgentDetailsByIdProvider),
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  /// -------- info list ----------
-                  _InfoRow(icon: Icons.place_outlined, text: location),
-                  const SizedBox(height: 8),
-                  //_InfoRow(icon: Icons.language_outlined, text: languagesLabel),
-                  const SizedBox(height: 8),
-                  _InfoRow(
-                    icon: Icons.badge_outlined,
-                    text: '$experienceYears years experience',
-                  ),
-                  const SizedBox(height: 12),
-
-                  /// -------- services chips/buttons ----------
-                  if (services?.isNotEmpty ?? true)
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 10,
-                      children: services?.map((s) {
-                        return FilledButton(
-                          onPressed: () => onServiceTap?.call(s ?? ''),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: Text(s ?? ''),
-                        );
-                      }).toList() ?? [],
-                    ),
-
-                  const SizedBox(height: 12),
-                  //const _SectionDivider(),
-                  // Text('Documents/ Licenses', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                  // const SizedBox(height: 10),
-                  // Row(
-                  //   children: [
-                  //     const Icon(Icons.verified_user, color: Colors.green),
-                  //     const SizedBox(width: 8),
-                  //     Text('Verified', style: tt.bodyMedium?.copyWith(color: Colors.green)),
-                  //   ],
-                  // ),
-                  // const SizedBox(height: 6),
-                  // TextButton(onPressed: onViewCertification, child: const Text('View certification')),
-                  //
-                  // const SizedBox(height: 8),
-                  const _SectionDivider(),
-
-
-                  Visibility(
-                      visible: agent.data?.reviews?.isNotEmpty ?? true,
-                      child: Text('Reviews', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
-                  ListView.separated(
-                      shrinkWrap: true,
-                      itemBuilder: (context,i){
-                    return _SkeletonCard(height: 100, comment: agent.data?.reviews?[i].comment ?? '');
-                  }, separatorBuilder : (_, __) => const SizedBox(height: 10), itemCount: agent.data?.reviews?.length ?? 0)
-
-
-                ],
-              );
-            },
-            error: (error, stackTrace) => ErrorRetryView(
-              title: 'Error loading agents',
-              message: error.toString(),
-              onRetry: () => ref.invalidate(fetchAgentDetailsByIdProvider),
-            ),
-            loading: () => Center(
-              child: SizedBox(
-                width: 30,
-                height: 30,
-                child: LoadingIndicator(
-                  indicatorType: Indicator.ballBeat,
-                  strokeWidth: 2,
-                  backgroundColor: Colors.transparent,
-                  pathBackgroundColor: Colors.black,
                 ),
               ),
-            ),
-          ),
+
+              /// ---------- LOADING (centered) ----------
+              loading: () => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child:  Center(
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: LoadingIndicator(
+                        indicatorType: Indicator.ballBeat,
+                        colors: [Theme.of(context).colorScheme.primary],
+                        backgroundColor: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

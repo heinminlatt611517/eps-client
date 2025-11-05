@@ -7,109 +7,127 @@ import 'package:loading_indicator/loading_indicator.dart';
 import '../../../widgets/error_tetry_view.dart';
 
 class ServiceStatusPage extends ConsumerWidget {
-  const ServiceStatusPage({
-    super.key,
-  });
+  const ServiceStatusPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cs = Theme
-        .of(context)
-        .colorScheme;
-    final tt = Theme
-        .of(context)
-        .textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     ///provider states
     final customerServiceStatusState = ref.watch(
-        fetchAllCustomerServiceStatusProvider);
+      fetchAllCustomerServiceStatusProvider,
+    );
 
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// ---- Header OUTSIDE the LayoutBuilder ----
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: Text(
+                'Service Status',
+                style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
+            const SizedBox(height: 10),
 
-              Text('Service Status',
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 10),
-
-              /// Grid of agent cards
-              customerServiceStatusState.when(
-                data: (customerServices) {
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: customerServices.data?.length ?? 0,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      final item = customerServices.data![i]; // your mapped VO
-                      return _CustomerServiceTile(
-                        serviceName: item.serviceName ?? '-',
-                        agentName: item.agentName ?? '-',
-                        cost: item.serviceCost ?? '0',
-                        status: item.status ?? 0,
-                        updatedAt: item.updatedAt, // DateTime? or String? (see tile)
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ServiceStatusDetailsPage(id: customerServices.data?[i].id,),
-                            ),
+            /// Fill remaining height
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return customerServiceStatusState.when(
+                    // ---------- DATA ----------
+                    data: (customerServices) => SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: customerServices.data?.length ?? 0,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          final item = customerServices.data![i];
+                          return _CustomerServiceTile(
+                            serviceName: item.serviceName ?? '-',
+                            agentName: item.agentName ?? '-',
+                            cost: item.serviceCost ?? '0',
+                            status: item.status ?? 0,
+                            updatedAt: item.updatedAt,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ServiceStatusDetailsPage(id: item.id),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  );
-                },
-                error: (error, stackTrace) =>
-                    ErrorRetryView(
-                      title: 'Error loading customer service status list',
-                      message: error.toString(),
-                      onRetry: () =>
-                          ref.invalidate(fetchAllCustomerServiceStatusProvider),
+                      ),
                     ),
-                loading: () =>
-                    SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: LoadingIndicator(
-                            indicatorType: Indicator.ballBeat,
-                            colors: [Theme
-                                .of(context)
-                                .colorScheme
-                                .primary
-                            ],
-                            backgroundColor: Colors.transparent,
+
+                    /// ---------- ERROR (centered) ----------
+                    error: (error, stack) => SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: ErrorRetryView(
+                            title: 'Error loading customer service status',
+                            message: error.toString(),
+                            onRetry: () => ref.refresh(fetchAllCustomerServiceStatusProvider),
                           ),
                         ),
                       ),
                     ),
+
+                    /// ---------- LOADING (centered) ----------
+                    loading: () => SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: LoadingIndicator(
+                              indicatorType: Indicator.ballBeat,
+                              colors: [Theme.of(context).colorScheme.primary],
+                              backgroundColor: Colors.transparent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-  Widget _CustomerServiceTile({
-    required String serviceName,
-    required String agentName,
-    required String cost,
-    required int status,
-    dynamic updatedAt,
-    VoidCallback? onTap,
-  }) {
-    return Builder(builder: (context) {
+Widget _CustomerServiceTile({
+  required String serviceName,
+  required String agentName,
+  required String cost,
+  required int status,
+  dynamic updatedAt,
+  VoidCallback? onTap,
+}) {
+  return Builder(
+    builder: (context) {
       final cs = Theme.of(context).colorScheme;
       final tt = Theme.of(context).textTheme;
 
@@ -120,12 +138,26 @@ class ServiceStatusPage extends ConsumerWidget {
           d = DateTime.tryParse(v);
         }
         if (d == null) return '-';
-        const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const m = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         return '${d.day.toString().padLeft(2, '0')} ${m[d.month - 1]} ${d.year}';
       }
 
       String _statusLabel(int s) => s == 1 ? 'Active' : 'Inactive';
-      Color _statusColor(int s) => s == 1 ? const Color(0xFF50B463) : cs.outline;
+      Color _statusColor(int s) =>
+          s == 1 ? const Color(0xFF50B463) : cs.outline;
 
       return Material(
         color: Colors.transparent,
@@ -163,7 +195,9 @@ class ServiceStatusPage extends ConsumerWidget {
                         serviceName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
 
@@ -181,8 +215,12 @@ class ServiceStatusPage extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text('\u0E3F $cost',
-                              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                          Text(
+                            '\u0E3F $cost',
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -190,8 +228,10 @@ class ServiceStatusPage extends ConsumerWidget {
                       /// Date + status chip
                       Row(
                         children: [
-                          Text('Updated ${_fmtDate(updatedAt)}',
-                              style: tt.bodySmall?.copyWith(color: cs.outline)),
+                          Text(
+                            'Updated ${_fmtDate(updatedAt)}',
+                            style: tt.bodySmall?.copyWith(color: cs.outline),
+                          ),
                           const Spacer(),
                           // Container(
                           //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -221,6 +261,6 @@ class ServiceStatusPage extends ConsumerWidget {
           ),
         ),
       );
-    });
-  }
-
+    },
+  );
+}

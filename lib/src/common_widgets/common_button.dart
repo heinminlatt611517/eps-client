@@ -7,7 +7,7 @@ class CommonButton extends StatelessWidget {
   const CommonButton(
       {super.key,
       required this.text,
-      required this.onTap,
+       this.onTap,
       this.fontSize = 16,
       this.containerVPadding,
       this.containerHPadding,
@@ -17,7 +17,7 @@ class CommonButton extends StatelessWidget {
       this.buttonTextColor,
       this.fontFamily});
   final String text;
-  final Function() onTap;
+  final Function()? onTap;
   final double? fontSize;
   final Color? bgColor;
   final double? containerVPadding;
@@ -31,7 +31,7 @@ class CommonButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Bounceable(
       onTap: () {
-        onTap();
+        onTap!();
       },
       child: Container(
         padding: EdgeInsets.symmetric(

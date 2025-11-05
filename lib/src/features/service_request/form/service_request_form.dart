@@ -16,6 +16,7 @@ class ServiceRequestForm {
 
   /// Step 3 (docs)
   final List<ServiceDoc> documents;
+  final String? documentType;
 
   /// Step 4 (review)
   final String? note;
@@ -34,6 +35,7 @@ class ServiceRequestForm {
     this.gender,
     this.expiryDate,
     this.documents = const [],
+    this.documentType,
     this.note,
     this.agree = false,
     this.agreeTerm = false
@@ -51,6 +53,7 @@ class ServiceRequestForm {
     String? gender,
     DateTime? expiryDate,
     List<ServiceDoc>? documents,
+    String? documentType,
     String? note,
     bool? agree,
     bool? agreeTerm,
@@ -67,6 +70,7 @@ class ServiceRequestForm {
       gender: gender ?? this.gender,
       expiryDate: expiryDate ?? this.expiryDate,
       documents: documents ?? this.documents,
+      documentType: documentType ?? this.documentType,
       note: note ?? this.note,
       agree: agree ?? this.agree,
       agreeTerm: agreeTerm ?? this.agreeTerm,
@@ -162,6 +166,7 @@ class ServiceRequestForm {
       expiryDate: expiryDate!,
       note: (note?.trim().isEmpty ?? true) ? null : note!.trim(),
       documents: documents,
+      documentType: documentType
     );
   }
 }
