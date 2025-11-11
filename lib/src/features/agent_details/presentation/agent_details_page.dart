@@ -80,11 +80,11 @@ class AgentDetailsPage extends ConsumerWidget {
 
                       /// info
                       _InfoRow(icon: Icons.place_outlined, text: location),
-                      const SizedBox(height: 8),
-                      _InfoRow(
-                        icon: Icons.badge_outlined,
-                        text: '$experienceYears years experience',
-                      ),
+                      // const SizedBox(height: 8),
+                      // _InfoRow(
+                      //   icon: Icons.badge_outlined,
+                      //   text: '$experienceYears years experience',
+                      // ),
                       const SizedBox(height: 12),
 
                       /// services buttons

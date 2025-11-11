@@ -7,7 +7,7 @@ part of 'service_request_form_notifier.dart';
 // **************************************************************************
 
 String _$serviceRequestFormNotifierHash() =>
-    r'b436090b10bcda59fb8bacd786c019cdf6dc94d0';
+    r'0320a5aca86225d6a1b2ba8feb68283d18c67048';
 
 /// See also [ServiceRequestFormNotifier].
 @ProviderFor(ServiceRequestFormNotifier)

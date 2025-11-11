@@ -10,7 +10,7 @@ enum SecureDataList {
   isSignedIn,
   authToken,
   baseApiUrl,
-  userData,
+  userName,
   leaveTypes,
 }
 
@@ -37,6 +37,16 @@ class SecureStorage {
     return _box.read(SecureDataList.fCMToken.name);
   }
 
+  ///user name
+  saveUserName(String userName) async {
+    await _box.write(SecureDataList.userName.name, userName);
+  }
+
+  ///get userName
+  getUserName() {
+    return _box.read(SecureDataList.userName.name);
+  }
+
   ///auth token
   saveAuthToken(String authToken) async {
     await _box.write(SecureDataList.authToken.name, authToken);
@@ -56,5 +66,11 @@ SecureStorage secureStorage(SecureStorageRef ref) {
 Future<String?> getAuthStatus(GetAuthStatusRef ref) {
   final provider = ref.watch(secureStorageProvider);
   return provider.getAuthStatus();
+}
+
+@riverpod
+Future<String?> getUserName(GetAuthStatusRef ref) {
+  final provider = ref.watch(secureStorageProvider);
+  return provider.getUserName();
 }
 

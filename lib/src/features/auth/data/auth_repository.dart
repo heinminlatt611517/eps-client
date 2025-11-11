@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -40,6 +41,7 @@ class AuthRepository {
       final tokenBox = GetStorage();
 
       tokenBox.write(SecureDataList.token.name, response.data['token']);
+      SecureStorage().saveUserName(response.data['data']['name']);
     } on DioException catch (e) {
       throw e.response?.data["message"] ??
           ErrorHandler.handle(e).failure.message;
@@ -63,6 +65,13 @@ class AuthRepository {
         kEndPointRegister,
         options: Options(headers: {"Content-Type": "application/json"}),
         data: payload,
+      );
+
+      final tokenBox = GetStorage();
+      tokenBox.write(SecureDataList.token.name, response.data['token']);
+      tokenBox.write(
+        SecureDataList.userName.name,
+        response.data['data']['name'],
       );
     } on DioException catch (e) {
       throw e.response?.data["message"] ??

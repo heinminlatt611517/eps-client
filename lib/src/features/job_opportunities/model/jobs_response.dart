@@ -36,6 +36,7 @@ class JobVO {
   int? id;
   String? title;
   String? location;
+  String? description;
   String? type;
   String? salary;
   DateTime? updatedAt;
@@ -49,11 +50,13 @@ class JobVO {
     this.salary,
     this.updatedAt,
     this.createdAt,
+    this.description
   });
 
   factory JobVO.fromJson(Map<String, dynamic> json) => JobVO(
     id: json["id"],
     title: json["title"],
+    description: json["description"],
     location: json["location"],
     type: json["type"],
     salary: json["salary"],
@@ -65,8 +68,9 @@ class JobVO {
     "id": id,
     "title": title,
     "location": location,
-    "type" : type,
     "salary": salary,
+    "type" : type,
+    "description": description,
     "updated_at": updatedAt?.toIso8601String(),
     "created_at": createdAt?.toIso8601String(),
   };

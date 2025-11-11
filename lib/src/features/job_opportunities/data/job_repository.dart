@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:eps_client/src/features/job_opportunities/model/job_detail_response.dart';
 import 'package:eps_client/src/features/job_opportunities/model/jobs_response.dart';
 import 'package:eps_client/src/network/api_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,19 @@ class JobRepository {
     }
   }
 
+  ///get job details by id
+  Future<JobDetailResponse> getJobDetailById({required String id}) async {
+    try {
+      final response = await dio.get(kEndPointJobDetails, data: {"id": id});
+      JobDetailResponse data = JobDetailResponse.fromJson(response.data);
+
+      return data;
+    } on DioException catch (e) {
+      throw e.response?.data["message"] ??
+          ErrorHandler.handle(e).failure.message;
+    }
+  }
+
 }
 
 @riverpod
@@ -41,4 +55,13 @@ Future<JobsResponse> fetchAllJobs(
     ) async {
   final provider = ref.watch(jobRepositoryProvider);
   return provider.fetchAllJobs();
+}
+
+@riverpod
+Future<JobDetailResponse> fetchJobDetailById(
+    FetchJobDetailByIdRef ref, {
+      required String id,
+    }) async {
+  final provider = ref.watch(jobRepositoryProvider);
+  return provider.getJobDetailById(id: id);
 }

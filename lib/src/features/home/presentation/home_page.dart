@@ -1,20 +1,27 @@
 import 'package:eps_client/src/features/job_opportunities/presentation/job_opportunities_page.dart';
+import 'package:eps_client/src/features/profile/presentation/profile_page.dart';
 import 'package:eps_client/src/features/upload_documents/presentation/upload_documents_page.dart';
 import 'package:eps_client/src/utils/images.dart';
+import 'package:eps_client/src/utils/secure_storage.dart';
 import 'package:eps_client/src/utils/strings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_storage/get_storage.dart';
 
 import '../../../widgets/app_card_view.dart';
 import '../../../widgets/home_service_card_view.dart';
+import '../../dashboard/controller/dashboard_controller.dart';
+import '../../dashboard/presentation/dashboard_screen.dart';
 import '../../notifications/presentation/notification_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+    final box = GetStorage();
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -24,17 +31,25 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top bar
+              /// Top bar
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: cs.secondaryContainer,
-                    child: Icon(Icons.person_outline, color: cs.onSecondaryContainer),
+                  InkWell(
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => CustomerProfilePage()),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: cs.secondaryContainer,
+                      child: Icon(Icons.person_outline, color: cs.onSecondaryContainer),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Hello | Login',
+                    child: Text('Hello | ${SecureStorage().getUserName()}',
                         style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   ),
                   _IconBadge(
@@ -90,9 +105,13 @@ class HomePage extends StatelessWidget {
                     title: kLabelVisaPassportServices,
                     enabled: true,
                     onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const UploadDocumentsPage()),
+                      ref
+                          .read(dashboardControllerProvider.notifier)
+                          .setPosition(1);
+                      DashboardScreen.pageController.animateToPage(
+                        1,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
                       );
                     },
                   ),
@@ -115,7 +134,8 @@ class HomePage extends StatelessWidget {
                   ServiceCard(
                     imageName: kCarWorkshopImage,
                     title: kLabelCarAndWorkshops,
-                    enabled: false, // greyed like mock
+                    enabled: false,
+                    onTap: (){},
                   ),
                 ],
               ),

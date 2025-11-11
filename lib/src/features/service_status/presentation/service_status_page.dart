@@ -40,7 +40,7 @@ class ServiceStatusPage extends ConsumerWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return customerServiceStatusState.when(
-                    // ---------- DATA ----------
+                    /// ---------- DATA ----------
                     data: (customerServices) => SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       child: ListView.separated(

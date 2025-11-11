@@ -29,4 +29,16 @@ class ServiceRequestController extends _$ServiceRequestController {
     }
     return state.hasError == false;
   }
+
+  Future<bool> submitRatingAndReview(dynamic requestData) async {
+    final repo = ref.read(serviceRequestRepositoryProvider);
+    state = const AsyncValue.loading();
+    final result = await AsyncValue.guard(
+          () => repo.submitRating(requestData),
+    );
+    if (_mounted) {
+      state = result;
+    }
+    return state.hasError == false;
+  }
 }

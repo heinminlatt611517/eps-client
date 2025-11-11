@@ -8,6 +8,7 @@ import 'package:loading_indicator/loading_indicator.dart';
 
 import '../../../common_widgets/custom_app_bar_view.dart';
 import '../../../widgets/error_tetry_view.dart';
+import 'job_detail_page.dart';
 
 class JobOpportunitiesPage extends ConsumerStatefulWidget {
   const JobOpportunitiesPage({super.key});
@@ -70,6 +71,12 @@ class _JobOpportunitiesPageState extends ConsumerState<JobOpportunitiesPage> {
                   child: JobCardView(
                     job: job,
                     onView: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => JobDetailPage(id: job.id.toString(),),
+                        ),
+                      );
                     },
                   ),
                 )),

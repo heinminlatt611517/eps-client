@@ -16,6 +16,11 @@ const String kEndPointGetJobs = "/jobs";
 const String kEndPointUploadCV = "/upload-cv";
 const String kEndPointGetAllCustomerServiceStatus = "/customer-services-list";
 const String kEndPointServiceStatusDetails = "/customer-service-detail";
+const String kEndPointProfile="/profile";
+const String kEndPointJobDetails = "/job-detail";
+const String kEndPointSaveRatingAndReview= "/save-review";
+
+
 
 ///Parameters
 const String kParamApiKey = "api_key";

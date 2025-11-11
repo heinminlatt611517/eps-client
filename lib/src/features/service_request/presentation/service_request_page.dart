@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:eps_client/src/features/agent_details/model/agent_details_response.dart';
 import 'package:eps_client/src/features/service_request/controller/service_request_controller.dart';
 import 'package:eps_client/src/utils/async_value_ui.dart';
+import 'package:eps_client/src/utils/extensions.dart';
 import 'package:eps_client/src/utils/gap.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:path/path.dart' as p;
 import '../../../common_widgets/personal_detail_input_field.dart';
+import '../../../widgets/agent_rating_dialog.dart';
 import '../../../widgets/error_tetry_view.dart';
 import '../../../widgets/loading_view.dart';
 import '../../agent_details/data/agent_details_repository.dart';
@@ -368,6 +370,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
       serviceRequestControllerProvider,
       (_, state) => state.showAlertDialogOnError(context),
     );
+
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -758,7 +761,10 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
         UploadActionTile(
           icon: Icons.upload_file_outlined,
           label: 'Manual Entry',
-          onTap: () {
+          onTap: () async{
+            final picked = await showDocumentTypePicker(context);
+            if (picked == null) return;
+            ref.read(serviceRequestFormNotifierProvider.notifier).setDocumentType(picked.name.toLowerCase());
             setState(() => _manualEntry = true);
           },
         ),
@@ -958,7 +964,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
           const SizedBox(height: 12),
 
           PersonalDetailInputField(
-            label: 'Passport Number',
+            label:ref.watch(serviceRequestFormNotifierProvider).documentType == DocumentType.passport.name ?  'Passport Number' : 'Number',
             controller: _passportCtrl,
             keyboardType: TextInputType.text,
             onChanged: (_) => _sync(),
@@ -1314,21 +1320,44 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
   }
 
 
-  void _submit() async {
-    final state = ref.watch(serviceRequestControllerProvider);
-    if (!state.isLoading) {
-      final isSuccess = await ref
-          .read(serviceRequestControllerProvider.notifier)
-          .submit();
+  Future<void> _submit() async {
+    final notifier = ref.read(serviceRequestControllerProvider.notifier);
+    final state = ref.read(serviceRequestControllerProvider);
 
-      ///is success login
-      if (isSuccess) {
-        setState(() {
-          _isSuccessService = true;
-        });
+    if (state.isLoading) return;
+
+    final isSuccess = await notifier.submit();
+
+    if (!mounted) return;
+
+    if (isSuccess) {
+      setState(() {
+        _isSuccessService = true;
+      });
+
+      final result = await showAgentRatingDialog(
+        context,
+        agentId: _agent?.id.toString() ?? '',
+      );
+
+      if (result != null && result.isNotEmpty) {
+        final ratingState = ref.read(serviceRequestControllerProvider);
+        if (!ratingState.isLoading) {
+          final ratingOk =
+          await notifier.submitRatingAndReview(result);
+
+          if (!mounted) return;
+
+          if (ratingOk) {
+            context.showSuccessSnackBar(
+              'Rating submitted! Thanks for sharing your experience — it helps us serve you better 🎉',
+            );
+          }
+        }
       }
     }
   }
+
 
   /// simple text helpers
   static String _firstGivenName(String names) {

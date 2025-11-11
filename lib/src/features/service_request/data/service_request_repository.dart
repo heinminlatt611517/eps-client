@@ -27,6 +27,7 @@ class ServiceRequestRepository {
         'gender': p.gender,
         'number': p.number,
         'expiry_date': _ymd(p.expiryDate),
+        'type' : p.documentType,
         if ((p.note ?? '').trim().isNotEmpty) 'note': p.note!.trim(),
       });
 
@@ -62,6 +63,29 @@ class ServiceRequestRepository {
           ErrorHandler.handle(e).failure.message;
     }
   }
+
+  Future<void> submitRating(dynamic result) async {
+    final formData = FormData.fromMap(result);
+
+    final res = await dio.post(
+      kEndPointSaveRatingAndReview,
+      data: formData,
+      options: Options(
+        contentType: Headers.multipartFormDataContentType,
+        followRedirects: false,
+        validateStatus: (s) => s != null && s < 500,
+      ),
+    );
+
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        error: 'Upload failed with status ${res.statusCode}',
+      );
+    }
+  }
+
 
 }
 
