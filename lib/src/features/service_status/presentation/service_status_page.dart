@@ -118,6 +118,39 @@ class ServiceStatusPage extends ConsumerWidget {
   }
 }
 
+enum StatusStage {pending, received, processing, readyForPickup }
+
+extension on StatusStage {
+  String get label => switch (this) {
+    StatusStage.received => 'Received',
+    StatusStage.processing => 'In Progress',
+    StatusStage.readyForPickup => 'Ready for Pickup',
+    StatusStage.pending => 'Pending',
+  };
+}
+
+StatusStage _toStage(int status) {
+  switch (status) {
+    case 1: return StatusStage.received;
+    case 2: return StatusStage.processing;
+    case 3: return StatusStage.readyForPickup;
+    default: return StatusStage.pending;
+  }
+}
+
+String _statusLabel(int status) => _toStage(status).label;
+
+Color _statusColor(BuildContext context, int status) {
+  final cs = Theme.of(context).colorScheme;
+  switch (_toStage(status)) {
+    case StatusStage.pending:        return cs.outline;
+    case StatusStage.received:       return cs.secondary;
+    case StatusStage.processing:     return cs.primary;
+    case StatusStage.readyForPickup: return Colors.green;
+  }
+}
+
+
 Widget _CustomerServiceTile({
   required String serviceName,
   required String agentName,
@@ -154,10 +187,6 @@ Widget _CustomerServiceTile({
         ];
         return '${d.day.toString().padLeft(2, '0')} ${m[d.month - 1]} ${d.year}';
       }
-
-      String _statusLabel(int s) => s == 1 ? 'Active' : 'Inactive';
-      Color _statusColor(int s) =>
-          s == 1 ? const Color(0xFF50B463) : cs.outline;
 
       return Material(
         color: Colors.transparent,
@@ -199,7 +228,6 @@ Widget _CustomerServiceTile({
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 4),
 
                       /// Agent + cost
                       Row(
@@ -215,15 +243,33 @@ Widget _CustomerServiceTile({
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            '\u0E3F $cost',
-                            style: tt.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                          Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _statusColor(context, status).withOpacity(.12),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: _statusColor(context, status)),
+                                ),
+                                child: Text(
+                                  _statusLabel(status),
+                                  style: tt.labelSmall?.copyWith(
+                                    color: _statusColor(context, status),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '\u0E3F $cost',
+                                style: tt.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
 
                       /// Date + status chip
                       Row(
@@ -233,21 +279,6 @@ Widget _CustomerServiceTile({
                             style: tt.bodySmall?.copyWith(color: cs.outline),
                           ),
                           const Spacer(),
-                          // Container(
-                          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          //   decoration: BoxDecoration(
-                          //     color: _statusColor(status).withOpacity(.12),
-                          //     borderRadius: BorderRadius.circular(999),
-                          //     border: Border.all(color: _statusColor(status)),
-                          //   ),
-                          //   child: Text(
-                          //     _statusLabel(status),
-                          //     style: tt.labelSmall?.copyWith(
-                          //       color: _statusColor(status),
-                          //       fontWeight: FontWeight.w700,
-                          //     ),
-                          //   ),
-                          // ),
                         ],
                       ),
                     ],

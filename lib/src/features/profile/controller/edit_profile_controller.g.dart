@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'service_request_controller.dart';
+part of 'edit_profile_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$serviceRequestControllerHash() =>
-    r'bc35d4ae4d302b51b7e0f388003ee9c85508fbcc';
+String _$editProfileControllerHash() =>
+    r'badcca06c201040e3e5aeb8999a48f2fd2e4fb99';
 
-/// See also [ServiceRequestController].
-@ProviderFor(ServiceRequestController)
-final serviceRequestControllerProvider =
-    AutoDisposeAsyncNotifierProvider<ServiceRequestController, void>.internal(
-      ServiceRequestController.new,
-      name: r'serviceRequestControllerProvider',
+/// See also [EditProfileController].
+@ProviderFor(EditProfileController)
+final editProfileControllerProvider =
+    AutoDisposeAsyncNotifierProvider<EditProfileController, void>.internal(
+      EditProfileController.new,
+      name: r'editProfileControllerProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$serviceRequestControllerHash,
+          : _$editProfileControllerHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$ServiceRequestController = AutoDisposeAsyncNotifier<void>;
+typedef _$EditProfileController = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

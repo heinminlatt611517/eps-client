@@ -19,6 +19,8 @@ const String kEndPointServiceStatusDetails = "/customer-service-detail";
 const String kEndPointProfile="/profile";
 const String kEndPointJobDetails = "/job-detail";
 const String kEndPointSaveRatingAndReview= "/save-review";
+const String kEndPointEditProfile= "/save-profile";
+
 
 
 

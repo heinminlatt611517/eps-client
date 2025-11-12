@@ -256,8 +256,6 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
 
   bool get _canNext {
     final form = ref.watch(serviceRequestFormNotifierProvider);
-
-    debugPrint("GenderValidate>>>>${form.genderValid}");
     switch (_step) {
       case StepStage.choose:
         return form.canProceedFromChoose;
@@ -512,7 +510,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
   /// ---------- pages ----------
   Widget _pageChoose() {
     final tt = Theme.of(context).textTheme;
-
+    final cs = Theme.of(context).colorScheme;
     ///agent details data provider
     final agentDetailsDataProvider = ref.watch(
       fetchAgentDetailsByIdProvider(id: widget.agentID.toString() ?? ''),
@@ -520,48 +518,29 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
 
     return agentDetailsDataProvider.when(
       data: (agentsDetailsResponse) {
-        final agents = <AgentDetail>[
-          if (agentsDetailsResponse.data != null)
-            agentsDetailsResponse.data ?? AgentDetail(),
-        ];
+        final agent = agentsDetailsResponse.data;                 // nullable
+        final agents = agent == null ? const <AgentDetail>[] : [agent];
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final name = agent?.name?.trim() ?? '';
+          if (name.isNotEmpty) {
+            final current =
+                ref.read(serviceRequestFormNotifierProvider).agentName; // adjust to your field
+            if (current != name) {
+              ref.read(serviceRequestFormNotifierProvider.notifier).setAgent(name);
+            }
+          }
+        });
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           children: [
-            Text(
-              'Agent & Dropdown',
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
             const SizedBox(height: 8),
-            _SelectBox(
-              onTap: () async {
-                final v = await _pickOne<AgentDetail>(
-                  title: 'Select Agent',
-                  items: agents,
-                  itemBuilder: (a) => Row(
-                    children: [
-                      const CircleAvatar(radius: 18, child: Icon(Icons.person)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          a.name ?? '',
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const Icon(Icons.star, size: 18, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(a.rating.toString() ?? ''),
-                    ],
-                  ),
-                );
-
-                ///set agent name to provider
-                if (v != null) setState(() => _agent = v);
-                ref
-                    .read(serviceRequestFormNotifierProvider.notifier)
-                    .setAgent(v?.name ?? '');
-              },
+            Container(
+              padding: EdgeInsets.all(kMarginMedium),
+              decoration: BoxDecoration(
+                color: cs.surfaceVariant.withOpacity(.5),
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Row(
                 children: [
                   const CircleAvatar(radius: 18, child: Icon(Icons.person)),
@@ -571,7 +550,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _agent?.name ?? 'Agent Name',
+                          agentsDetailsResponse.data?.name ?? 'Agent Name',
                           style: tt.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -585,16 +564,78 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                               color: Colors.amber,
                             ),
                             const SizedBox(width: 4),
-                            Text((_agent?.rating.toString() ?? '')),
+                            Text((agentsDetailsResponse.data?.rating.toString() ?? '')),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.keyboard_arrow_down_rounded),
                 ],
               ),
             ),
+            // _SelectBox(
+            //   onTap: () async {
+            //     final v = await _pickOne<AgentDetail>(
+            //       title: 'Select Agent',
+            //       items: agents,
+            //       itemBuilder: (a) => Row(
+            //         children: [
+            //           const CircleAvatar(radius: 18, child: Icon(Icons.person)),
+            //           const SizedBox(width: 12),
+            //           Expanded(
+            //             child: Text(
+            //               a.name ?? '',
+            //               style: tt.titleMedium?.copyWith(
+            //                 fontWeight: FontWeight.w700,
+            //               ),
+            //             ),
+            //           ),
+            //           const Icon(Icons.star, size: 18, color: Colors.amber),
+            //           const SizedBox(width: 4),
+            //           Text(a.rating.toString() ?? ''),
+            //         ],
+            //       ),
+            //     );
+            //
+            //     ///set agent name to provider
+            //     if (v != null) setState(() => _agent = v);
+            //     ref
+            //         .read(serviceRequestFormNotifierProvider.notifier)
+            //         .setAgent(v?.name ?? '');
+            //   },
+            //   child: Row(
+            //     children: [
+            //       const CircleAvatar(radius: 18, child: Icon(Icons.person)),
+            //       const SizedBox(width: 12),
+            //       Expanded(
+            //         child: Column(
+            //           crossAxisAlignment: CrossAxisAlignment.start,
+            //           children: [
+            //             Text(
+            //               agentsDetailsResponse.data?.name ?? 'Agent Name',
+            //               style: tt.titleMedium?.copyWith(
+            //                 fontWeight: FontWeight.w700,
+            //               ),
+            //             ),
+            //             const SizedBox(height: 2),
+            //             Row(
+            //               children: [
+            //                 const Icon(
+            //                   Icons.star,
+            //                   size: 16,
+            //                   color: Colors.amber,
+            //                 ),
+            //                 const SizedBox(width: 4),
+            //                 Text((_agent?.rating.toString() ?? '')),
+            //               ],
+            //             ),
+            //           ],
+            //         ),
+            //       ),
+            //       const Icon(Icons.keyboard_arrow_down_rounded),
+            //     ],
+            //   ),
+            // ),
             const SizedBox(height: 18),
             Text(
               'Select Service',
@@ -635,7 +676,7 @@ class _ServiceRequestPageState extends ConsumerState<ServiceRequestPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      _service?.title ?? 'Visa Extension',
+                      _service?.title ?? 'Select Service',
                       style: tt.titleMedium,
                       overflow: TextOverflow.ellipsis,
                     ),

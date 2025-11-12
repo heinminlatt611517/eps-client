@@ -25,6 +25,29 @@ class ProfileRepository {
     }
   }
 
+  ///edit profile
+  Future<void> editProfile(dynamic result) async {
+    final formData = FormData.fromMap(result);
+
+    final res = await dio.post(
+      kEndPointEditProfile,
+      data: formData,
+      options: Options(
+        contentType: Headers.multipartFormDataContentType,
+        followRedirects: false,
+        validateStatus: (s) => s != null && s < 500,
+      ),
+    );
+
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        error: 'Upload failed with status ${res.statusCode}',
+      );
+    }
+  }
+
 }
 
 @riverpod

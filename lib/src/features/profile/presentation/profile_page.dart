@@ -1,5 +1,6 @@
 import 'package:eps_client/src/common_widgets/custom_app_bar_view.dart';
 import 'package:eps_client/src/features/profile/data/profile_repository.dart';
+import 'package:eps_client/src/features/profile/presentation/edit_profile_page.dart';
 import 'package:eps_client/src/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,7 +80,25 @@ class CustomerProfilePage extends ConsumerWidget {
     final profileDataState = ref.watch(fetchProfileDataProvider);
 
     return Scaffold(
-      appBar: CustomAppBarView(title: 'Profile'),
+      appBar: CustomAppBarView(title: 'Profile',
+      trailing: TextButton(
+        onPressed: profileDataState.maybeWhen(
+          data: (profileData) => () async {
+            final profile = profileData.data;
+            final changed = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => EditCustomerProfilePage(profile: profile),
+              ),
+            );
+
+            if (changed == true && context.mounted) {
+              ref.invalidate(fetchProfileDataProvider);
+            }
+          },
+          orElse: () => null,
+        ),
+        child: const Text('Edit'),
+      ),),
       backgroundColor: cs.surface,
       body: profileDataState.when(
         data: (profileData) {
