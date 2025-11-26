@@ -13,7 +13,6 @@ import 'package:intl/intl.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:loading_indicator/loading_indicator.dart';
-
 import '../../../utils/secure_storage.dart';
 import '../../../utils/strings.dart';
 
@@ -160,7 +159,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: kMarginMedium2),
+            padding: const EdgeInsets.symmetric(horizontal: kMarginMedium2,vertical: kMarginMedium2),
             child: Form(
               key: _formKey,
               child: DecoratedBox(
@@ -297,32 +296,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       ),
 
                       20.vGap,
-                      Row(
-                        children: const [
-                          Expanded(child: Divider(height: 1)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text('Or continue with'),
-                          ),
-                          Expanded(child: Divider(height: 1)),
-                        ],
-                      ),
-                      16.vGap,
-
-                      /// Google Sign-in
-                      OutlinedButton.icon(
-                        onPressed: state.isLoading
-                            ? null
-                            : () => ref
-                            .read(registerControllerProvider.notifier)
-                            .signInWithGoogle(),
-                        icon: Image.asset('assets/images/google.png', width: 20, height: 20),
-                        label: const Text('Sign in with Google', style: TextStyle(color: Colors.black)),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
                     ],
                   ),
                 ),

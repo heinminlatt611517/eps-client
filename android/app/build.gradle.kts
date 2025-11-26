@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.eps.eps_client"
+        applicationId = "com.techysolutions.eps_client"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -10,7 +10,7 @@ class RegisterController extends _$RegisterController {
 
   @override
   FutureOr<void> build() {
-    /// * this code is for  preventing error caused by popping out or going to other screen while the app is sending api request
+    /// * this code is for  preventing error caused by popping out or going to other screen while the app is sending fcm request
     ref.onDispose(() => mounted = false);
   }
 
@@ -24,11 +24,5 @@ class RegisterController extends _$RegisterController {
     );
     state = res;
     return !state.hasError;
-  }
-
-  Future<void> signInWithGoogle() async {
-    state = const AsyncLoading();
-    final repo = ref.read(authRepositoryNoTokenProvider);
-    state = await AsyncValue.guard(() => repo.signInWithGoogle());
   }
 }

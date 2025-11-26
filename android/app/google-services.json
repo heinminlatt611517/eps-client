@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "568985103888",
-    "project_id": "eps-c2a0b",
-    "storage_bucket": "eps-c2a0b.firebasestorage.app"
+    "project_number": "388130539888",
+    "project_id": "eps-client",
+    "storage_bucket": "eps-client.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:568985103888:android:22fd51c6ce4756171f2495",
+        "mobilesdk_app_id": "1:388130539888:android:00794003df8fbfa06267b5",
         "android_client_info": {
-          "package_name": "com.eps.eps_client"
+          "package_name": "com.techysolutions.eps_client"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "388130539888-gkbiruquf3j7en5qdsf39ngucos1t2eo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.techysolutions.eps_client",
+            "certificate_hash": "9ff0bf0c9e2b6b099aed2265a996d23225dda3a8"
+          }
+        },
+        {
+          "client_id": "388130539888-4qu234hb59p8oeh0qkg57i105m79v160.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBW4U9n1Uit_Ri4W0uJ60kpPHpbUT4DODI"
+          "current_key": "AIzaSyAQyg580Jo9pEYK9TqdoAV1eqZ34ertn0M"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "388130539888-4qu234hb59p8oeh0qkg57i105m79v160.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "388130539888-latoo196q7tetf50k6caejupol3up577.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.techysolutions.eps-client"
+              }
+            }
+          ]
         }
       }
     }

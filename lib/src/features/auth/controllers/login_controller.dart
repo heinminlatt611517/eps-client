@@ -10,7 +10,7 @@ class LoginController extends _$LoginController {
 
   @override
   FutureOr<void> build() {
-    /// * this code is for  preventing error caused by popping out or going to other screen while the app is sending api request
+    /// * this code is for  preventing error caused by popping out or going to other screen while the app is sending fcm request
     ref.onDispose(() => mounted = false);
   }
 
@@ -19,6 +19,19 @@ class LoginController extends _$LoginController {
     state = const AsyncValue.loading();
     final result = await AsyncValue.guard(
           () => authRepository.login(email: email, password: password),
+    );
+    if (mounted) {
+      state = result;
+    }
+
+    return state.hasError == false;
+  }
+
+  Future<bool> signInWithGoogle(dynamic payload) async {
+    final authRepository = ref.read(authRepositoryNoTokenProvider);
+    state = const AsyncValue.loading();
+    final result = await AsyncValue.guard(
+          () => authRepository.signInWithGoogle(payload),
     );
     if (mounted) {
       state = result;

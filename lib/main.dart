@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:eps_client/src/fcm/fcm_service.dart';
 import 'package:eps_client/src/routing/go_router/go_router_delegate.dart';
 import 'package:eps_client/src/utils/fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -58,6 +59,10 @@ class MyApp extends ConsumerWidget {
       colorScheme: base.colorScheme,
       fontFamily: kJaldi,
     );
+
+    ///fcm initialize
+    FCMService().listenForMessages(ref);
+
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,

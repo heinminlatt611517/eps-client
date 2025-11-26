@@ -82,6 +82,8 @@ class MoreSettingsPage extends ConsumerWidget {
               if (ok == true) {
                 await GetStorage()
                     .remove(SecureDataList.isAlreadyLogin.name);
+                await GetStorage()
+                    .remove(SecureDataList.token.name);
                 ref
                     .read(secureStorageProvider)
                     .saveAuthStatus(kAuthNotLoggedIn);

@@ -23,5 +23,23 @@ final homeRepositoryProvider = AutoDisposeProvider<HomeRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef HomeRepositoryRef = AutoDisposeProviderRef<HomeRepository>;
+String _$fetchCategoriesHash() => r'97e9fcd8268c2ffb885727604925d556d2934541';
+
+/// See also [fetchCategories].
+@ProviderFor(fetchCategories)
+final fetchCategoriesProvider =
+    AutoDisposeFutureProvider<CategoryResponse>.internal(
+      fetchCategories,
+      name: r'fetchCategoriesProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$fetchCategoriesHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FetchCategoriesRef = AutoDisposeFutureProviderRef<CategoryResponse>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

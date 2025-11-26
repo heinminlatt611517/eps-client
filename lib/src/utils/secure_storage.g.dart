@@ -57,5 +57,40 @@ final getUserNameProvider = AutoDisposeFutureProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GetUserNameRef = AutoDisposeFutureProviderRef<String?>;
+String _$categoriesLocalHash() => r'f9777df64aa33ac35f717bd7e9b28ab312ba232a';
+
+/// See also [categoriesLocal].
+@ProviderFor(categoriesLocal)
+final categoriesLocalProvider =
+    AutoDisposeFutureProvider<List<CategoryVO>>.internal(
+      categoriesLocal,
+      name: r'categoriesLocalProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$categoriesLocalHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CategoriesLocalRef = AutoDisposeFutureProviderRef<List<CategoryVO>>;
+String _$getFcmTokenHash() => r'323e3e224af517426a59b40be18e8e8ef366bcfe';
+
+/// See also [getFcmToken].
+@ProviderFor(getFcmToken)
+final getFcmTokenProvider = AutoDisposeProvider<String?>.internal(
+  getFcmToken,
+  name: r'getFcmTokenProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$getFcmTokenHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef GetFcmTokenRef = AutoDisposeProviderRef<String?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -11,7 +11,7 @@ extension AsyncValueUI on AsyncValue {
       final message = _errorMessage(error);
       showExceptionAlertDialog(
         context: context,
-        exception: message,
+        message: message,
       );
     }
   }

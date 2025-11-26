@@ -1,6 +1,8 @@
 import 'package:get_storage/get_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../features/home/model/category_response.dart';
+
 part 'secure_storage.g.dart';
 
 enum SecureDataList {
@@ -12,6 +14,7 @@ enum SecureDataList {
   baseApiUrl,
   userName,
   leaveTypes,
+  categories,
 }
 
 class SecureStorage {
@@ -55,6 +58,30 @@ class SecureStorage {
   getAuthToken() {
     return _box.read(SecureDataList.authToken.name);
   }
+
+
+  /// Save categories list
+  Future<void> saveCategories(List<CategoryVO> items) async {
+    final jsonList = items.map((e) => e.toJson()).toList();
+    await _box.write(SecureDataList.categories.name, jsonList);
+  }
+
+  /// Get categories list (sync)
+  List<CategoryVO> getCategoriesSync() {
+    final raw = _box.read(SecureDataList.categories.name);
+    if (raw is List) {
+      return raw.map((e) => CategoryVO.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    return <CategoryVO>[];
+  }
+
+  /// Get categories list (async)
+  Future<List<CategoryVO>> getCategories() async => getCategoriesSync();
+
+  /// Clear categories (optional)
+  Future<void> clearCategories() => _box.remove(SecureDataList.categories.name);
+
+
 }
 
 @Riverpod(keepAlive: true)
@@ -74,3 +101,14 @@ Future<String?> getUserName(GetAuthStatusRef ref) {
   return provider.getUserName();
 }
 
+@riverpod
+Future<List<CategoryVO>> categoriesLocal(CategoriesLocalRef ref) async {
+  final store = ref.read(secureStorageProvider);
+  return store.getCategories();
+}
+
+@riverpod
+String? getFcmToken(GetFcmTokenRef ref) {
+  final store = ref.watch(secureStorageProvider);
+  return store.getFCMToken();
+}

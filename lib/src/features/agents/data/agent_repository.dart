@@ -14,14 +14,24 @@ class AgentRepository {
   final Ref ref;
   final Dio dio;
 
-  ///get all available agent data
-  Future<AvailableAgentsResponse> fetchAvailableAgents() async {
-    try {
+  /// Get all available agent data
+  Future<AvailableAgentsResponse> fetchAvailableAgents({
+    required String? categoryId,
+  }) async {
+    if (categoryId == null || categoryId.trim().isEmpty) {
       final response = await dio.get(kEndPointAvailableAgents);
-      AvailableAgentsResponse data = AvailableAgentsResponse.fromJson(
-        response.data,
+
+      final data = AvailableAgentsResponse.fromJson(response.data);
+      return data;
+    }
+
+    try {
+      final response = await dio.get(
+        kEndPointAvailableAgents,
+        data: {"category_id": categoryId},
       );
 
+      final data = AvailableAgentsResponse.fromJson(response.data);
       return data;
     } on DioException catch (e) {
       throw e.response?.data["message"] ??
@@ -37,8 +47,9 @@ AgentRepository agentRepository(AgentRepositoryRef ref) {
 
 @riverpod
 Future<AvailableAgentsResponse> fetchAvailableAgents(
-  FetchAvailableAgentsRef ref,
-) async {
+  FetchAvailableAgentsRef ref, {
+  required String categoryId,
+}) async {
   final provider = ref.watch(agentRepositoryProvider);
-  return provider.fetchAvailableAgents();
+  return provider.fetchAvailableAgents(categoryId: categoryId);
 }

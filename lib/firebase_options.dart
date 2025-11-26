@@ -41,48 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCFb5p9cAzCNEF2YQlp6hzLBfZS9SfP5Yo',
-    appId: '1:568985103888:web:ef86c90a1be2471d1f2495',
-    messagingSenderId: '568985103888',
-    projectId: 'eps-c2a0b',
-    authDomain: 'eps-c2a0b.firebaseapp.com',
-    storageBucket: 'eps-c2a0b.firebasestorage.app',
-    measurementId: 'G-B6B2492XGF',
+    apiKey: 'AIzaSyCWb6rTYLrH0cX5cpEmdLBqMTBpRwE7B-8',
+    appId: '1:388130539888:web:6289f891aeb1bab66267b5',
+    messagingSenderId: '388130539888',
+    projectId: 'eps-client',
+    authDomain: 'eps-client.firebaseapp.com',
+    storageBucket: 'eps-client.firebasestorage.app',
+    measurementId: 'G-QV0HJ02WXC',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBW4U9n1Uit_Ri4W0uJ60kpPHpbUT4DODI',
-    appId: '1:568985103888:android:22fd51c6ce4756171f2495',
-    messagingSenderId: '568985103888',
-    projectId: 'eps-c2a0b',
-    storageBucket: 'eps-c2a0b.firebasestorage.app',
+    apiKey: 'AIzaSyAQyg580Jo9pEYK9TqdoAV1eqZ34ertn0M',
+    appId: '1:388130539888:android:00794003df8fbfa06267b5',
+    messagingSenderId: '388130539888',
+    projectId: 'eps-client',
+    storageBucket: 'eps-client.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCmDf2rKgM3iZ9uIGlpqv2UFVNiF0bh8T4',
-    appId: '1:568985103888:ios:c39acf3ef80343d71f2495',
-    messagingSenderId: '568985103888',
-    projectId: 'eps-c2a0b',
-    storageBucket: 'eps-c2a0b.firebasestorage.app',
+    apiKey: 'AIzaSyDhdLQW3DpQu7DvV6L6Dp_c_Fcq9pNCRAs',
+    appId: '1:388130539888:ios:ddb9995d5b4758c76267b5',
+    messagingSenderId: '388130539888',
+    projectId: 'eps-client',
+    storageBucket: 'eps-client.firebasestorage.app',
     iosBundleId: 'com.example.epsClient',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCmDf2rKgM3iZ9uIGlpqv2UFVNiF0bh8T4',
-    appId: '1:568985103888:ios:c39acf3ef80343d71f2495',
-    messagingSenderId: '568985103888',
-    projectId: 'eps-c2a0b',
-    storageBucket: 'eps-c2a0b.firebasestorage.app',
+    apiKey: 'AIzaSyDhdLQW3DpQu7DvV6L6Dp_c_Fcq9pNCRAs',
+    appId: '1:388130539888:ios:ddb9995d5b4758c76267b5',
+    messagingSenderId: '388130539888',
+    projectId: 'eps-client',
+    storageBucket: 'eps-client.firebasestorage.app',
     iosBundleId: 'com.example.epsClient',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCFb5p9cAzCNEF2YQlp6hzLBfZS9SfP5Yo',
-    appId: '1:568985103888:web:98035c7e6f286e991f2495',
-    messagingSenderId: '568985103888',
-    projectId: 'eps-c2a0b',
-    authDomain: 'eps-c2a0b.firebaseapp.com',
-    storageBucket: 'eps-c2a0b.firebasestorage.app',
-    measurementId: 'G-74RY7KFXFH',
+    apiKey: 'AIzaSyCWb6rTYLrH0cX5cpEmdLBqMTBpRwE7B-8',
+    appId: '1:388130539888:web:a9e1ab56c4458c646267b5',
+    messagingSenderId: '388130539888',
+    projectId: 'eps-client',
+    authDomain: 'eps-client.firebaseapp.com',
+    storageBucket: 'eps-client.firebasestorage.app',
+    measurementId: 'G-6D4643SZ75',
   );
 }

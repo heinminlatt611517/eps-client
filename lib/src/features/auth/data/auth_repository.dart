@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -81,7 +80,34 @@ class AuthRepository {
     }
   }
 
-  Future<void> signInWithGoogle() async {}
+  Future<void> signInWithGoogle(dynamic payload) async {
+    final formData = FormData.fromMap(payload);
+    try {
+      final baseOptions = BaseOptions(
+        baseUrl: kBaseUrl,
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 20),
+        responseType: ResponseType.json,
+        headers: {"Content-Type": "application/json"},
+      );
+
+      final dio = Dio(baseOptions);
+      final response = await dio.post(
+        kEndPointSocialLogin,
+        options: Options(headers: {"Content-Type": "application/json"}),
+        data: payload,
+      );
+      final tokenBox = GetStorage();
+
+      tokenBox.write(SecureDataList.token.name, response.data['token']);
+      SecureStorage().saveUserName(response.data['data']['name']);
+    } on DioException catch (e) {
+      throw e.response?.data["message"] ??
+          ErrorHandler.handle(e).failure.message;
+    } catch (e) {
+      throw e.toString();
+    }
+  }
 }
 
 @riverpod

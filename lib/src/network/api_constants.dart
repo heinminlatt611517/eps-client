@@ -20,6 +20,12 @@ const String kEndPointProfile="/profile";
 const String kEndPointJobDetails = "/job-detail";
 const String kEndPointSaveRatingAndReview= "/save-review";
 const String kEndPointEditProfile= "/save-profile";
+const String kEndPointCategories = "/categories";
+const String kEndPointSocialLogin = "/social-login";
+const String kEndPointNotifications = "/notifications";
+const String kEndPointSaveFcmToken = "/save-firebase-token";
+
+
 
 
 
